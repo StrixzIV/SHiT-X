@@ -30,7 +30,7 @@
   }
 }
 
-.eyebrow { display: block; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+.eyebrow { display: block; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--gold); }
 .muted { color: var(--muted); font-size: 14px; margin: 6px 0 0; }
 
 /* ───────────── buttons ───────────── */

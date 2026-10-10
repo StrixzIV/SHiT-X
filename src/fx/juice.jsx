@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 
+// Split into grapheme clusters, not code points, so Thai tone marks and
+// vowels (่ ้ ๊ ั ิ ุ ำ) stay attached to their base letter.
+const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('th', { granularity: 'grapheme' }) : null
+const graphemes = (text) => (segmenter ? [...segmenter.segment(text)].map((g) => g.segment) : [...text])
+
 // Per-letter wobble, like Balatro's floating title text.
 export function WavyText({ text, className = '' }) {
   return (
     <span className={`wavy ${className}`} aria-label={text}>
-      {[...text].map((ch, i) => (
+      {graphemes(text).map((ch, i) => (
         <span key={i} aria-hidden style={{ animationDelay: `${i * -0.09}s` }}>
           {ch === ' ' ? ' ' : ch}
         </span>
