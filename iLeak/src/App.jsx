@@ -21,12 +21,19 @@ import {
   ExternalLink,
   PhoneCall,
   Sparkles,
-  Award
+  Award,
+  Lock
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('edu'); // 'edu' | 'prevent' | 'detect' | 'report'
+  const [unlockedStages, setUnlockedStages] = useState({
+    edu: true,
+    prevent: false,
+    detect: false,
+    report: false
+  });
   
   // Battery API & Hardware Detection States
   const [isSupported] = useState(() => typeof navigator !== 'undefined' && 'getBattery' in navigator);
@@ -43,16 +50,16 @@ export default function App() {
   // Probe scanning & diagnostics
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
-  const [scanningLiveValue, setScanningLiveValue] = useState(0);
-  const [testedVoltage, setTestedVoltage] = useState(null); // null | number
   const [hasScannedOnce, setHasScannedOnce] = useState(false);
-  const [scanTimestamp, setScanTimestamp] = useState(null);
+  const [scanTimestamp, setScanTimestamp] = useState(() => new Date().toLocaleTimeString('th-TH'));
+  const scanIntervalRef = useRef(null);
+  const isFirstRender = useRef(true);
 
   // Audio & Sensory Effects
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [certificateData, setCertificateData] = useState(() => ({
-    id: `KMITL-STUPID-2569-4048`,
+    id: `SHIT-X-2569-4048`,
     date: '10/10/2569',
   }));
 
@@ -133,9 +140,7 @@ export default function App() {
     const handleChargingChange = () => {
       if (batteryRef) {
         setHardwareCharging(batteryRef.charging);
-        if (batteryRef.charging) {
-          triggerShockVibration();
-        }
+        setScanTimestamp(new Date().toLocaleTimeString('th-TH'));
       }
     };
 
@@ -164,14 +169,35 @@ export default function App() {
         batteryRef.removeEventListener('levelchange', handleLevelChange);
       }
     };
-  }, [triggerShockVibration]);
+  }, []);
 
-  // Watch for charging changes during simulation
+  // Sensory feedback on charging state change (hardware or simulator)
   useEffect(() => {
-    if (manualSimulationActive && manualCharging) {
-      triggerShockVibration();
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
-  }, [manualSimulationActive, manualCharging, triggerShockVibration]);
+
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+
+    if (isCharging) {
+      triggerShockVibration();
+    } else {
+      playBeep(660, 0.25, 'triangle');
+    }
+  }, [isCharging, triggerShockVibration, playBeep]);
+
+  // Cleanup scan interval on unmount
+  useEffect(() => {
+    return () => {
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Login button handler per CI requirements
   const handleLoginClick = () => {
@@ -186,33 +212,35 @@ export default function App() {
       return;
     }
     setShowConsentWarning(false);
+    setUnlockedStages(prev => ({ ...prev, detect: true }));
     setActiveTab('detect');
   };
 
   // Stage 3: Start inspection probe simulation
   const handleStartInspection = () => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+    }
     setIsScanning(true);
     setScanProgress(0);
-    setScanningLiveValue(isCharging ? 888 : 12);
-    setTestedVoltage(null);
     playBeep(520, 0.1, 'sine');
 
     let current = 0;
-    const interval = setInterval(() => {
-      current += 15;
+    scanIntervalRef.current = setInterval(() => {
+      current += 20;
       if (current >= 100) {
-        clearInterval(interval);
+        clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
         setScanProgress(100);
         setIsScanning(false);
         setHasScannedOnce(true);
+        setUnlockedStages(prev => ({ ...prev, report: true }));
         const now = new Date();
         setScanTimestamp(now.toLocaleTimeString('th-TH'));
 
         if (isCharging) {
-          setTestedVoltage(9999);
           triggerShockVibration();
         } else {
-          setTestedVoltage(0);
           playBeep(660, 0.25, 'triangle');
           try {
             confetti({
@@ -226,10 +254,6 @@ export default function App() {
         }
       } else {
         setScanProgress(current);
-        const simulatedFluctuation = isCharging 
-          ? Math.round(5000 + (current / 100) * 4999) 
-          : Math.round((current / 100) * 40);
-        setScanningLiveValue(simulatedFluctuation);
         playBeep(400 + current * 4, 0.05, 'sine');
       }
     }, 150);
@@ -238,7 +262,7 @@ export default function App() {
   const handleOpenCertificate = () => {
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
     setCertificateData({
-      id: `KMITL-STUPID-2569-${randomDigits}`,
+      id: `SHIT-X-2569-${randomDigits}`,
       date: new Date().toLocaleDateString('th-TH'),
     });
     setShowCertificateModal(true);
@@ -247,7 +271,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] font-sans antialiased flex flex-col justify-between selection:bg-[#E35205] selection:text-white">
       
-      {/* ================= HERO HEADER (KMITL CI STYLE) ================= */}
+      {/* ================= HERO HEADER ================= */}
       <header className="relative bg-[#1A1A1A] text-white pt-10 pb-20 px-4 sm:px-8 overflow-hidden shadow-2xl border-b-4 border-[#E35205]">
         {/* Background Overlay & Flood Ambience */}
         <div 
@@ -269,7 +293,7 @@ export default function App() {
 
         <div className="relative max-w-6xl mx-auto flex flex-col justify-between">
           
-          {/* Top Bar: KMITL Lab Brand & Login */}
+          {/* Top Bar: Lab Brand & Login */}
           <div className="flex items-center justify-between w-full border-b border-gray-800/80 pb-5">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="w-12 h-12 rounded-xl border-2 border-[#E35205] bg-black/60 shadow-[0_0_15px_rgba(227,82,5,0.4)] flex items-center justify-center shrink-0">
@@ -283,10 +307,10 @@ export default function App() {
                   <span className="text-xs text-gray-400 font-mono hidden sm:inline">SYS-REV. 2569.10</span>
                 </div>
                 <h2 className="text-sm sm:text-base font-bold tracking-wide text-gray-100 uppercase mt-0.5">
-                  KMITL STUPID LAB: Flood Electricity Division
+                  STUPID HACKATHON THAILAND X: Flood Electricity Division
                 </h2>
                 <p className="text-xs text-gray-400 font-light">
-                  สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง • ศูนย์วิจัยมวลน้ำและการนำไฟฟ้าชาร์จเจอร์
+                  The Stupid Hackathon in Thailand X • ศูนย์วิจัยมวลน้ำและการนำไฟฟ้าชาร์จเจอร์
                 </p>
               </div>
             </div>
@@ -319,7 +343,7 @@ export default function App() {
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-3 drop-shadow-md leading-tight">
-              KMITL <span className="text-[#E35205]">Hydro-Charge</span> Sentinel
+              SHiT-X <span className="text-[#E35205]">Hydro-Charge</span> Sentinel
             </h1>
             <p className="text-sm sm:text-lg text-gray-300 font-light leading-relaxed">
               ระบบตรวจสอบกระแสไฟฟ้ารั่วไหลในมวลน้ำผ่านอินเทอร์เฟซ USB สากล
@@ -352,31 +376,49 @@ export default function App() {
 
           {/* TAB 2 */}
           <button
-            onClick={() => setActiveTab('prevent')}
+            onClick={() => unlockedStages.prevent && setActiveTab('prevent')}
+            disabled={!unlockedStages.prevent}
             className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 relative ${
-              activeTab === 'prevent'
+              !unlockedStages.prevent
+                ? 'opacity-40 cursor-not-allowed bg-gray-50/50 text-gray-400 border-2 border-transparent'
+                : activeTab === 'prevent'
                 ? 'text-[#E35205] bg-orange-50/80 shadow-sm border-2 border-[#E35205]'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-2 border-transparent'
             }`}
           >
-            <span className="absolute top-1 right-2 text-[10px] font-mono opacity-50">#02</span>
+            <span className="absolute top-1 right-2 text-[10px] font-mono opacity-60 flex items-center gap-1">
+              {!unlockedStages.prevent && <Lock className="w-2.5 h-2.5 text-gray-400" />}
+              #02
+            </span>
             <ShieldAlert className={`w-5 h-5 mb-1.5 ${activeTab === 'prevent' ? 'text-[#E35205]' : 'text-gray-400'}`} />
             การป้องกันไฟฟ้า
           </button>
 
           {/* TAB 3 (MAIN) */}
           <button
-            onClick={() => setActiveTab('detect')}
+            onClick={() => unlockedStages.detect && setActiveTab('detect')}
+            disabled={!unlockedStages.detect}
             className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 relative ${
-              activeTab === 'detect'
+              !unlockedStages.detect
+                ? 'opacity-40 cursor-not-allowed bg-gray-50/50 text-gray-400 border-2 border-transparent'
+                : activeTab === 'detect'
                 ? 'text-[#E35205] bg-orange-50/80 shadow-sm border-2 border-[#E35205]'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-2 border-transparent'
             }`}
           >
-            <span className="absolute top-1 right-2 text-[10px] font-mono font-bold text-[#E35205]">#03 MAIN</span>
+            <span className="absolute top-1 right-2 text-[10px] font-mono font-bold flex items-center gap-1">
+              {!unlockedStages.detect ? (
+                <span className="opacity-60 flex items-center gap-0.5 text-gray-400 font-normal">
+                  <Lock className="w-2.5 h-2.5" />
+                  #03
+                </span>
+              ) : (
+                <span className="text-[#E35205]">#03 MAIN</span>
+              )}
+            </span>
             <div className="relative">
               <Zap className={`w-5 h-5 mb-1.5 ${activeTab === 'detect' ? 'text-[#E35205] fill-[#E35205]' : 'text-gray-400'}`} />
-              {isCharging && (
+              {isCharging && unlockedStages.detect && (
                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
               )}
             </div>
@@ -385,14 +427,20 @@ export default function App() {
 
           {/* TAB 4 */}
           <button
-            onClick={() => setActiveTab('report')}
+            onClick={() => unlockedStages.report && setActiveTab('report')}
+            disabled={!unlockedStages.report}
             className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 relative ${
-              activeTab === 'report'
+              !unlockedStages.report
+                ? 'opacity-40 cursor-not-allowed bg-gray-50/50 text-gray-400 border-2 border-transparent'
+                : activeTab === 'report'
                 ? 'text-[#E35205] bg-orange-50/80 shadow-sm border-2 border-[#E35205]'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-2 border-transparent'
             }`}
           >
-            <span className="absolute top-1 right-2 text-[10px] font-mono opacity-50">#04</span>
+            <span className="absolute top-1 right-2 text-[10px] font-mono opacity-60 flex items-center gap-1">
+              {!unlockedStages.report && <Lock className="w-2.5 h-2.5 text-gray-400" />}
+              #04
+            </span>
             <FileText className={`w-5 h-5 mb-1.5 ${activeTab === 'report' ? 'text-[#E35205]' : 'text-gray-400'}`} />
             สรุปผล & ช่วยเหลือ
           </button>
@@ -415,7 +463,7 @@ export default function App() {
                 </h3>
               </div>
               <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-mono">
-                วารสารวิชาการ KMITL-SHIT
+                วารสารวิชาการ SHiT-X
               </span>
             </div>
 
@@ -439,7 +487,7 @@ export default function App() {
                   02
                 </div>
                 <h4 className="font-bold text-gray-900 text-base mb-1.5 flex items-center gap-2">
-                  คุณสมบัติการนำไฟฟ้าของน้ำลาดกระบัง
+                  คุณสมบัติการนำไฟฟ้าของน้ำท่วมขัง
                 </h4>
                 <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                   น้ำฝนบริสุทธิ์ไม่นำไฟฟ้า แต่น้ำท่วมขังอุดมไปด้วยแคลเซียม ดินตะกอน ขยะเปียก และเศษปลั๊กพ่วง ทำให้มีสภาพการนำกระแสไฟฟ้าดีกว่าทองแดงบริสุทธิ์ 12 เท่า
@@ -485,10 +533,13 @@ export default function App() {
 
             {/* Navigation Button */}
             <button 
-              onClick={() => setActiveTab('prevent')}
-              className="w-full py-4 bg-[#E35205] hover:bg-[#d04904] text-white font-bold rounded-2xl text-base shadow-lg hover:shadow-orange-600/30 transition flex items-center justify-center gap-2"
+              onClick={() => {
+                setUnlockedStages(prev => ({ ...prev, prevent: true }));
+                setActiveTab('prevent');
+              }}
+              className="w-full py-4 bg-[#E35205] hover:bg-[#d04904] text-white font-bold rounded-2xl text-base shadow-lg hover:shadow-orange-600/30 transition flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>รับทราบหลักวิชาการ และไปยังขั้นตอน "การป้องกันไฟฟ้า"</span>
+              <span>รับทราบหลักวิชาการ และไปยังขั้นตอน "การป้องกันไฟฟ้า" (Stage 2)</span>
               <span className="text-xl">&rarr;</span>
             </button>
           </div>
@@ -752,14 +803,14 @@ export default function App() {
               <div className="relative z-10 flex flex-col items-center text-center">
                 
                 <span className="text-xs font-mono tracking-widest uppercase text-gray-400 mb-1">
-                  KMITL HYDRO-VOLTMETER SPECTROGRAPHIC READOUT
+                  SHiT-X HYDRO-PROBE STATUS READOUT
                 </span>
 
                 {/* Main Readout Value */}
                 {isScanning ? (
                   <div className="my-6">
-                    <div className="text-5xl sm:text-6xl font-black font-mono tracking-wider text-orange-400 animate-pulse">
-                      {scanningLiveValue} V
+                    <div className="text-4xl sm:text-5xl font-black font-mono tracking-wider text-orange-400 animate-pulse">
+                      SCANNING...
                     </div>
                     <p className="text-xs text-orange-300 font-mono mt-2">
                       กำลังสแกนไอออนและสนามไฟฟ้า... {scanProgress}%
@@ -771,25 +822,25 @@ export default function App() {
                       />
                     </div>
                   </div>
-                ) : testedVoltage === 9999 ? (
+                ) : isCharging ? (
                   <div className="my-4 animate-shock-glitch">
                     <span className="inline-block bg-red-600 text-white text-xs font-black uppercase px-3 py-1 rounded-full mb-2 tracking-widest">
-                      CRITICAL DANGER: 9999V DETECTED
+                      CRITICAL DANGER DETECTED
                     </span>
-                    <div className="text-6xl sm:text-8xl font-black font-mono tracking-tighter text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]">
-                      9,999 V
+                    <div className="text-5xl sm:text-7xl font-black font-mono tracking-tighter text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]">
+                      LEAK DETECTED
                     </div>
                     <p className="text-sm sm:text-base text-red-200 font-semibold mt-2">
                       คำเตือน: น้ำท่วมมีไฟฟ้าแรงสูงไหลเวียนผ่านสายชาร์จ! กรุณายกขาลอยจากพื้นทันที!
                     </p>
                   </div>
-                ) : testedVoltage === 0 ? (
+                ) : hasScannedOnce ? (
                   <div className="my-4">
                     <span className="inline-block bg-emerald-600 text-white text-xs font-black uppercase px-3 py-1 rounded-full mb-2 tracking-widest">
                       NORMAL: SAFE ENVIRONMENT
                     </span>
-                    <div className="text-6xl sm:text-8xl font-black font-mono tracking-tighter text-emerald-400">
-                      0.00 V
+                    <div className="text-5xl sm:text-7xl font-black font-mono tracking-tighter text-emerald-400">
+                      SAFE
                     </div>
                     <p className="text-sm sm:text-base text-emerald-200 font-medium mt-2">
                       ไม่พบกระแสไฟฟ้าไหลเข้าโทรศัพท์ หรือสายชาร์จยังไม่ได้สัมผัสน้ำ
@@ -797,8 +848,8 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="my-6">
-                    <div className="text-5xl sm:text-7xl font-black font-mono tracking-tight text-gray-500">
-                      ---.- V
+                    <div className="text-4xl sm:text-6xl font-black font-mono tracking-tight text-gray-500">
+                      STANDBY
                     </div>
                     <p className="text-xs sm:text-sm text-gray-400 mt-2">
                       กดปุ่มด้านล่างเพื่อเริ่มการสุ่มตรวจวัดกระแสไฟฟ้าในน้ำ
@@ -809,7 +860,7 @@ export default function App() {
                 {/* Sub Telemetry Bar */}
                 <div className="flex flex-wrap justify-center gap-4 sm:gap-8 border-t border-gray-800 pt-4 mt-4 w-full text-xs font-mono text-gray-400">
                   <div>ความถี่โครงข่าย: <span className="text-white font-bold">{isCharging ? '50.12 Hz' : '0.00 Hz'}</span></div>
-                  <div>ความขุ่นของน้ำ: <span className="text-white font-bold">420 NTU (คลองลาดกระบัง)</span></div>
+                  <div>ความขุ่นของน้ำ: <span className="text-white font-bold">420 NTU (น้ำท่วมขังเมืองกรุง)</span></div>
                   <div>เวลาตรวจวัดล่าสุด: <span className="text-white font-bold">{scanTimestamp || 'ยังไม่ได้ตรวจ'}</span></div>
                 </div>
 
@@ -843,13 +894,18 @@ export default function App() {
               </button>
 
               {/* Next Stage Button */}
-              {hasScannedOnce && (
+              {hasScannedOnce ? (
                 <button
                   onClick={() => setActiveTab('report')}
                   className="w-full py-3.5 bg-gray-900 hover:bg-black text-white font-bold rounded-2xl text-sm transition flex items-center justify-center gap-2 shadow"
                 >
                   <span>ดูบทวิเคราะห์ความปลอดภัย & โทรขอความช่วยเหลือ (Stage 4) &rarr;</span>
                 </button>
+              ) : (
+                <div className="w-full py-3 px-4 bg-gray-100 text-gray-500 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 border border-gray-200">
+                  <Lock className="w-4 h-4 text-gray-400" />
+                  <span>ต้องทำการตรวจวัดสเปกตรัมไฟฟ้าอย่างน้อย 1 ครั้ง เพื่อปลดล็อก Stage 4</span>
+                </div>
               )}
             </div>
 
@@ -886,7 +942,11 @@ export default function App() {
                   </p>
                   <div className="flex gap-2 shrink-0">
                     <button
-                      onClick={() => setManualCharging(true)}
+                      onClick={() => {
+                        setManualCharging(true);
+                        setIsScanning(false);
+                        setScanTimestamp(new Date().toLocaleTimeString('th-TH'));
+                      }}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
                         manualCharging 
                           ? 'bg-red-600 text-white shadow-md' 
@@ -897,7 +957,11 @@ export default function App() {
                       จำลองเสียบสายชาร์จ (ไฟรั่ว!)
                     </button>
                     <button
-                      onClick={() => setManualCharging(false)}
+                      onClick={() => {
+                        setManualCharging(false);
+                        setIsScanning(false);
+                        setScanTimestamp(new Date().toLocaleTimeString('th-TH'));
+                      }}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
                         !manualCharging 
                           ? 'bg-emerald-600 text-white shadow-md' 
@@ -928,18 +992,18 @@ export default function App() {
                 </h3>
               </div>
               <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-mono">
-                DOC-REF: KMITL-FLOOD-2569
+                DOC-REF: SHITX-FLOOD-2569
               </span>
             </div>
 
             {/* Diagnostic Result Banner */}
             <div className={`p-6 sm:p-8 rounded-3xl border-2 mb-8 text-center transition-all ${
-              isCharging || testedVoltage === 9999
+              isCharging
                 ? 'bg-red-50 border-red-300 text-red-950 shadow-lg shadow-red-100' 
                 : 'bg-emerald-50 border-emerald-300 text-emerald-950 shadow-lg shadow-emerald-100'
             }`}>
               <div className="inline-flex p-4 rounded-2xl mb-4 bg-white shadow-md border border-gray-100">
-                {isCharging || testedVoltage === 9999 ? (
+                {isCharging ? (
                   <Flame className="w-10 h-10 text-red-600 animate-bounce" />
                 ) : (
                   <CheckCircle2 className="w-10 h-10 text-emerald-600" />
@@ -947,24 +1011,24 @@ export default function App() {
               </div>
               
               <h4 className="text-xl sm:text-2xl font-black">
-                {isCharging || testedVoltage === 9999
+                {isCharging
                   ? 'คำเตือนขั้นวิกฤต: น้ำท่วมบริเวณนี้มีไฟรั่วแรงระดับชาร์จมือถือติด!' 
                   : 'ไม่พบกระแสไฟฟ้าไหลเข้าโทรศัพท์ (สภาวะปกติชั่วคราว)'}
               </h4>
               
               <p className="text-xs sm:text-sm text-gray-700 mt-2.5 max-w-lg mx-auto leading-relaxed">
-                {isCharging || testedVoltage === 9999
+                {isCharging
                   ? 'ระบบตรวจวัดพบว่ากระแสไฟฟ้าจากมวลน้ำสามารถจ่ายไฟเข้าสู่แบตเตอรี่โทรศัพท์ของท่านได้สำเร็จ แปลว่าน้ำท่วมมีไฟรั่วแรงระดับ 220V กรุณายกขาลอยจากพื้นและห้ามสัมผัสราวบันไดเหล็ก'
                   : 'สายชาร์จของคุณยังไม่แสดงสถานะชาร์จ อาจจะเพราะน้ำไม่มีไฟรั่ว หรือสายชาร์จของท่านขาดในอยู่แล้ว แนะนำให้ตรวจสอบหัวชาร์จอีกครั้ง'}
               </p>
 
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
                 <span className={`text-xs px-3 py-1 rounded-full font-bold ${
-                  isCharging || testedVoltage === 9999
+                  isCharging
                     ? 'bg-red-200 text-red-800' 
                     : 'bg-emerald-200 text-emerald-800'
                 }`}>
-                  ระดับแรงดัน: {testedVoltage !== null ? `${testedVoltage} V` : isCharging ? '9,999 V' : '0 V'}
+                  สถานะการตรวจวัด: {isCharging ? 'LEAK DETECTED' : 'SAFE'}
                 </span>
                 <span className="text-xs px-3 py-1 rounded-full font-bold bg-white text-gray-700 border border-gray-200">
                   พอร์ตเชื่อมต่อ: USB Type-C HydroProbe
@@ -1085,14 +1149,14 @@ export default function App() {
                 หนังสือรับรองการตรวจวัดประจุไฟฟ้าในมวลน้ำ
               </h3>
               <p className="text-xs text-gray-500 font-light mt-0.5">
-                ออกโดย: ศูนย์วิจัยนวัตกรรมน้ำท่วมและการสละสมาร์ทโฟน KMITL
+                ออกโดย: ศูนย์วิจัยนวัตกรรมน้ำท่วมและการสละสมาร์ทโฟน SHiT-X
               </p>
 
               <div className="my-6 p-4 rounded-2xl bg-orange-50/50 border border-orange-100 text-left text-xs space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-500">ผลการตรวจวัด:</span>
-                  <span className={`font-bold ${isCharging || testedVoltage === 9999 ? 'text-red-600' : 'text-emerald-700'}`}>
-                    {isCharging || testedVoltage === 9999 ? 'อันตราย (9,999V ไฟรั่วจริง)' : 'ปลอดภัย (0V)'}
+                  <span className={`font-bold ${isCharging ? 'text-red-600' : 'text-emerald-700'}`}>
+                    {isCharging ? 'LEAK DETECTED (อันตราย ตรวจพบไฟรั่ว)' : 'SAFE (ปลอดภัย ไม่พบกระแสไฟ)'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -1110,7 +1174,7 @@ export default function App() {
               </div>
 
               <p className="text-[11px] text-gray-400 italic mb-6">
-                "ใบรับรองนี้ใช้เพื่อความบันเทิงในงาน The Stupid Hackathon Thailand เท่านั้น ไม่สามารถใช้เคลมประกันภัยน้ำท่วมหรือประกันมือถือได้ทุกกรณี"
+                "ใบรับรองนี้ใช้เพื่อความบันเทิงในงาน The Stupid Hackathon in Thailand X เท่านั้น ไม่สามารถใช้เคลมประกันภัยน้ำท่วมหรือประกันมือถือได้ทุกกรณี"
               </p>
 
               <div className="flex gap-2">
@@ -1141,10 +1205,10 @@ export default function App() {
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-[#E35205]" />
             <span className="font-bold text-gray-800">HydroCharge Sentinel</span>
-            <span className="text-gray-400">• The Stupid Hackathon Thailand</span>
+            <span className="text-gray-400">• The Stupid Hackathon in Thailand X</span>
           </div>
           <p className="text-gray-400 text-[11px]">
-            © 2569 KMITL Stupid Lab. All Rights Reserved (except your smartphone warranty).
+            © 2569 The Stupid Hackathon in Thailand X. All Rights Reserved (except your smartphone warranty).
           </p>
         </div>
       </footer>
