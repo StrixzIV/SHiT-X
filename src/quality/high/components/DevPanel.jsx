@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { TIERS } from '../appraisal/specs.js'
-import { big, si } from '../game/format.js'
+import { TIERS } from '../../../appraisal/specs.js'
+import { big, si } from '../../../game/format.js'
 import { DEFAULT_KNOBS, DEFAULT_SKIPS } from '../devDefaults.js'
 
 // Opened from the DEV tickbox (top right). Works on every screen; the FX and

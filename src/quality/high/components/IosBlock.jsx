@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { appleModel } from '../appraisal/devices.js'
+import { appleModel } from '../../../appraisal/devices.js'
 import { beep } from '../fx/sfx.js'
 
 // iOS gives websites no charging state, no USB, nothing — in every browser,

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { WATT_CHOICES } from '../appraisal/specs.js'
+import { WATT_CHOICES } from '../../../appraisal/specs.js'
 import { beep } from '../fx/sfx.js'
-import { big, si } from '../game/format.js'
+import { big, si } from '../../../game/format.js'
 
-import { meterAngle, meterFor } from '../appraisal/meters.js'
+import { meterAngle, meterFor } from '../../../appraisal/meters.js'
 
 const short = (w) => si(w).replace(' ', '')
 

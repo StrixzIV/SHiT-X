@@ -1,4 +1,4 @@
-import { detectBrowser, escapeInApp } from '../appraisal/devices.js'
+import { detectBrowser, escapeInApp } from '../../../appraisal/devices.js'
 
 // What actually breaks (MDN browser-compat-data 8.1.5):
 // - Android in-app browsers are System WebView: the battery works, WebUSB / Serial / HID

@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { Crown, LogIn, Volume2, VolumeX } from 'lucide-react'
+import { Crown, LogIn, Sparkles, Volume2, VolumeX } from 'lucide-react'
+import { QUALITIES } from '../../qualityUrl.js'
 
 // The header sits above every overlay (agreement, calculation, blue screen) so the
 // DEV tickbox is always reachable; overlays read --header-h to start below it.
-export default function PortalHeader({ sound, onSound, dev, onDev, panel, onPanel, children }) {
+export default function PortalHeader({ sound, onSound, dev, onDev, panel, onPanel, quality = 'high', onQualityChange, onOpenQualityGate, children }) {
   const ref = useRef(null)
   useEffect(() => {
     const el = ref.current
@@ -28,6 +29,23 @@ export default function PortalHeader({ sound, onSound, dev, onDev, panel, onPane
         </span>
       </div>
       <div className="portal-tools">
+        {/* graphic quality (quality/QualityRouter.jsx) */}
+        <select
+          className="quality-select"
+          value={quality}
+          onChange={(e) => onQualityChange?.(e.target.value)}
+          aria-label="เลือกระดับกราฟิก"
+          title="เลือกระดับกราฟิก"
+        >
+          {QUALITIES.map((q) => (
+            <option key={q} value={q}>{q.toUpperCase()}</option>
+          ))}
+        </select>
+        {onOpenQualityGate && (
+          <button type="button" className="quality-open" onClick={onOpenQualityGate} title="เปิดหน้าต่างตั้งค่ากราฟิก" aria-label="เปิดหน้าต่างตั้งค่ากราฟิก">
+            <Sparkles size={14} />
+          </button>
+        )}
         {/* TEMP: always visible (even on iOS) while the team tests — remove before the final push. */}
         <label className={`dev-toggle ${dev ? 'on' : ''}`} title="โหมดนักพัฒนา: ข้ามข้อตกลง ปรับค่าได้ทุกอย่าง">
           <input type="checkbox" checked={dev} onChange={(e) => onDev(e.target.checked)} />

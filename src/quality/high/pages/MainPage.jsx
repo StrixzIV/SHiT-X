@@ -3,9 +3,9 @@ import Appraisal from '../components/Appraisal.jsx'
 import Peripherals from '../components/Peripherals.jsx'
 import HoldButton from '../components/HoldButton.jsx'
 import CalcOverlay from '../fx/CalcOverlay.jsx'
-import { estimateWatts, readSpecs, specBonus, tierFor } from '../appraisal/specs.js'
-import { computeScore } from '../game/score.js'
-import { big } from '../game/format.js'
+import { estimateWatts, readSpecs, specBonus, tierFor } from '../../../appraisal/specs.js'
+import { computeScore } from '../../../game/score.js'
+import { big } from '../../../game/format.js'
 import { reloadForBattery } from '../session.js'
 
 // Smallest total that lands on each FX level, nudged up a bit (for dev firing).

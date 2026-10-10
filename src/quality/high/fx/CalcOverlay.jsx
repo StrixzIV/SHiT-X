@@ -3,7 +3,7 @@ import { Award, PhoneCall, Printer, RotateCcw } from 'lucide-react'
 import Particles from './Particles.jsx'
 import { CountUp, WavyText } from './juice.jsx'
 import { SCENES, SCENE_MS } from './scenes/index.js'
-import { RESPONDERS } from '../game/responders.js'
+import { RESPONDERS } from '../../../game/responders.js'
 import { chipSound, multSound, tick, xmultSound, zeroSound } from './sfx.js'
 
 const VERDICT = [
