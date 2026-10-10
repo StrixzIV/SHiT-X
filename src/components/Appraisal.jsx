@@ -7,23 +7,60 @@ import { meterAngle, meterFor } from '../appraisal/meters.js'
 
 const short = (w) => si(w).replace(' ', '')
 
-function specLines(s, est, powered, userPlugged) {
-  const b = s.battery
+function powerText(p) {
+  const lvl = p.level != null ? ` · ${Math.round(p.level * 100)}%` : ''
+  if (p.known) return `${p.charging ? 'เสียบปลั๊กอยู่' : p.userPlugged ? 'ยืนยันเองว่าเสียบปลั๊ก' : 'ใช้แบตเตอรี่ (ไม่มีไฟเข้า)'}${lvl}`
+  return p.userPlugged ? 'ยืนยันเองว่าเสียบปลั๊ก' : 'เบราว์เซอร์ไม่บอก'
+}
+
+// Charging state: re-check for browsers that miss the event, and a manual
+// tick for browsers (all of iOS) that never expose it.
+function PowerCheck({ power: p }) {
+  const status = p.charging ? '⚡ ตรวจพบไฟเข้าเครื่อง' : p.known ? 'ยังไม่พบไฟเข้าเครื่อง' : 'เบราว์เซอร์นี้ไม่บอกสถานะชาร์จ'
+  const hint = p.charging
+    ? 'ระบบจะตรวจซ้ำให้อัตโนมัติทุก 2 วินาที'
+    : p.known
+      ? 'เสียบสายแล้วแต่ยังไม่ขึ้น? กดตรวจซ้ำ หรือติ๊กยืนยันเอง'
+      : p.why
+  return (
+    <div className={`power-check ${p.charging ? 'on' : !p.known && !p.userPlugged ? 'ask' : ''}`}>
+      <div className="pc-text">
+        <b>{status}</b>
+        <small>{hint}</small>
+      </div>
+      <div className="pc-actions">
+        {p.known && (
+          <button type="button" className="btn-line" onClick={p.recheck} disabled={p.checking}>
+            {p.checking ? 'กำลังตรวจ…' : 'ตรวจซ้ำ'}
+          </button>
+        )}
+        {!p.charging && (
+          <label className="pc-tick">
+            <input type="checkbox" checked={p.userPlugged} onChange={(e) => p.setUserPlugged(e.target.checked)} />
+            ยืนยันเองว่าเสียบสายชาร์จอยู่
+          </label>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function specLines(s, est, power) {
   return [
-    ['ระบบปฏิบัติการ', [s.platform, s.arch].filter(Boolean).join(' · ')],
+    ['ระบบปฏิบัติการ', [s.platform, s.arch, s.browser].filter(Boolean).join(' · ')],
     ['ประเภทเครื่อง', [s.form, s.model].filter(Boolean).join(' · ') || 'เครื่องไม่ยอมเปิดเผย (น่าสงสัย)'],
     ['หน่วยประมวลผล', s.cores ? `${s.cores} เธรด` : 'ไม่เปิดเผย'],
     ['หน่วยความจำ', s.memory ? (s.memory >= 8 ? `≥ ${s.memory} GB (เบราว์เซอร์ไม่ยอมบอกเกินนี้)` : `~${s.memory} GB`) : 'ไม่เปิดเผย (คนรวยมักเก็บเงียบ)'],
     ['การ์ดจอ', [s.gpu || 'ไม่ทราบ (อาจเป็นมันฝรั่ง)', s.gpuArch && `สถาปัตย์ ${s.gpuArch}`].filter(Boolean).join(' · ')],
     ['หน้าจอ', `${s.screen.w}×${s.screen.h}${s.screen.hz ? ` · ${s.screen.hz} Hz` : ''}${s.screen.extended ? ' · มีจอนอก' : ''}`],
-    ['แหล่งพลังงาน', b ? `${powered ? 'เสียบปลั๊กอยู่' : 'ใช้แบตเตอรี่ (ไม่มีไฟเข้า)'} · ${Math.round(b.level * 100)}%` : userPlugged ? 'แจ้งว่าเสียบปลั๊ก' : 'ไม่ทราบ'],
+    ['แหล่งพลังงาน', powerText(power)],
     ['อัตราชาร์จที่วัดได้', est.measured ? `~${est.measured} W` : 'วัดไม่ได้'],
   ]
 }
 
-export default function Appraisal({ specs, est, watts, override, setOverride, tier, bonus, powered, batteryKnown, userPlugged, setUserPlugged, stamped, onStamped, instant }) {
+export default function Appraisal({ specs, est, watts, override, setOverride, tier, bonus, power, stamped, onStamped, instant }) {
   const [shown, setShown] = useState(instant ? 99 : 0)
-  const lines = specs ? specLines(specs, est, powered, userPlugged) : []
+  const lines = specs ? specLines(specs, est, power) : []
   const typing = specs && shown < lines.length
   const dialReady = specs && shown >= lines.length
   const meter = meterFor(watts)
@@ -55,6 +92,9 @@ export default function Appraisal({ specs, est, watts, override, setOverride, ti
         <span className="eyebrow">ขั้นที่ 1 · การประเมินฐานะอุปกรณ์</span>
         <h2>เรากำลังตัดสินอุปกรณ์ของท่าน</h2>
       </div>
+      {!window.isSecureContext && (
+        <p className="insecure">⚠️ เปิดผ่าน http:// — เบราว์เซอร์ปิดเซ็นเซอร์แบต ไมค์ และ USB ให้เปิดผ่าน https หรือ localhost</p>
+      )}
 
       <div className="appraisal-grid">
         <dl className="spec-list">
@@ -106,14 +146,10 @@ export default function Appraisal({ specs, est, watts, override, setOverride, ti
               {WATT_CHOICES.map((w) => <option key={w} value={w}>{si(w)}</option>)}
             </select>
           </label>
-          {!batteryKnown && (
-            <label className="toggle">
-              <input type="checkbox" checked={userPlugged} onChange={(e) => setUserPlugged(e.target.checked)} />
-              เครื่องเสียบสายชาร์จอยู่ (เบราว์เซอร์นี้ไม่ยอมบอก)
-            </label>
-          )}
         </div>
       )}
+
+      {typing === false && specs && <PowerCheck power={power} />}
 
       {stamped && (
         <div key={tier.id} className={`tier-card tier-${tier.cls}`}>

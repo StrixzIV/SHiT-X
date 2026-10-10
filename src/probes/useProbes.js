@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ADAPTER_FACTORIES } from './index.js'
 
 // Each adapter: { id, name, label, port, mult|xmult, support(), start?(update) → stop,
-//                 arm?(update) (needs a user gesture), tap?(update, state) }
+//                 arm?(update) (needs a user gesture), tap?(update, state), refresh?(update) }
 // update(patch) merges into { supported, armed, live, reading, detail, port?, mult?, xmult? }
 const adapters = ADAPTER_FACTORIES.map((f) => f())
 
@@ -39,9 +39,14 @@ export function useProbes() {
     [states, updater],
   )
 
+  const refresh = useCallback(async (id) => {
+    const a = adapters.find((x) => x.id === id)
+    if (a?.support().ok) await a.refresh?.(updater(id))
+  }, [updater])
+
   const cards = adapters.map((a) => {
     const s = states[a.id]
     return { ...a, ...s, port: s.port ?? a.port, mult: 'mult' in s ? s.mult : a.mult, xmult: 'xmult' in s ? s.xmult : a.xmult }
   })
-  return { cards, tap }
+  return { cards, tap, refresh }
 }

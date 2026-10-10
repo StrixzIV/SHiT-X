@@ -12,7 +12,7 @@ export default function App() {
   const [agreed, setAgreed] = useState(DEV) // never persisted: read it every time
   const [sound, setSoundState] = useState(true)
   // Probes live at the app root so open ports/streams survive overlays.
-  const { cards, tap } = useProbes()
+  const { cards, tap, refresh } = useProbes()
 
   useEffect(() => setSound(sound), [sound])
 
@@ -20,7 +20,7 @@ export default function App() {
     <div className="app">
       <PortalHeader sound={sound} onSound={() => setSoundState(!sound)} />
       {agreed ? (
-        <MainPage cards={cards} tap={tap} dev={DEV} onShowGate={() => setAgreed(false)} />
+        <MainPage cards={cards} tap={tap} refresh={refresh} dev={DEV} onShowGate={() => setAgreed(false)} />
       ) : (
         <AgreementGate onAccept={() => setAgreed(true)} dev={DEV} />
       )}

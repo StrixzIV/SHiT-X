@@ -128,7 +128,6 @@
 .appraisal-tools { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-top: 16px; font-size: 13px; color: var(--muted); }
 .appraisal-tools label { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .appraisal-tools select { background: var(--ink-3); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: inherit; }
-.appraisal-tools .toggle input { accent-color: var(--gold); width: 18px; height: 18px; }
 
 /* tier stamp */
 .tier-card {
@@ -465,3 +464,19 @@ sub { font-size: .7em; vertical-align: baseline; position: relative; top: .25em;
 .dev details { margin-top: 6px; }
 .dev summary { cursor: pointer; color: #4ade80; }
 .dev pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 30dvh; overflow-y: auto; margin: 6px 0 0; padding: 6px; background: #000; border-radius: 6px; }
+
+/* charging re-check / manual confirm */
+.power-check {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+  margin-top: 14px; padding: 12px 14px; border-radius: 14px; border: 1px solid #2b2b31; background: var(--ink-3);
+}
+.power-check.on { border-color: rgb(110 231 168 / .5); }
+.power-check.ask { border-color: var(--gold); box-shadow: 0 0 0 0 rgb(212 175 55 / .5); animation: ask 1.6s ease-out infinite; }
+@keyframes ask { 70% { box-shadow: 0 0 0 10px rgb(212 175 55 / 0); } }
+.pc-text b { display: block; font-weight: 600; }
+.pc-text small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; line-height: 1.45; }
+.pc-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.pc-actions .btn-line { padding: 8px 14px; font-size: 14px; }
+.pc-tick { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.pc-tick input { width: 20px; height: 20px; accent-color: var(--gold); }
+.insecure { margin: 12px 0 0; padding: 10px 12px; border-radius: 12px; background: rgb(254 95 85 / .1); border: 1px solid rgb(254 95 85 / .35); color: #fecaca; font-size: 13px; }

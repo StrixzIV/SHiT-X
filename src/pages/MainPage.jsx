@@ -11,10 +11,11 @@ import { big } from '../game/format.js'
 // Smallest total that lands on each FX level, nudged up a bit (for dev firing).
 const LEVEL_TARGET = [0, 500, 3000, 12000, 50000, 300000, 5e9, 1e20]
 
-export default function MainPage({ cards, tap, dev, onShowGate }) {
+export default function MainPage({ cards, tap, refresh, dev, onShowGate }) {
   const [specs, setSpecs] = useState(null)
   const [override, setOverride] = useState(null)
   const [userPlugged, setUserPlugged] = useState(false)
+  const [checking, setChecking] = useState(false)
   const [stamped, setStamped] = useState(false)
   const [run, setRun] = useState(null) // snapshot of the score while the overlay is open
   // dev knobs
@@ -32,9 +33,24 @@ export default function MainPage({ cards, tap, dev, onShowGate }) {
   }, [instant, replay])
 
   const battery = cards.find((c) => c.id === 'battery')
-  const batteryKnown = battery.supported && !!specs?.battery
-  const realPowered = batteryKnown ? battery.live : userPlugged
+  const batteryKnown = battery.supported
+  const realPowered = (batteryKnown && battery.live) || userPlugged
   const powered = devPower === 'on' ? true : devPower === 'off' ? false : realPowered
+  const recheck = async () => {
+    setChecking(true)
+    await Promise.all([refresh('battery'), readSpecs().then(setSpecs), new Promise((r) => setTimeout(r, 600))])
+    setChecking(false)
+  }
+  const power = {
+    known: batteryKnown,
+    charging: batteryKnown && battery.live,
+    level: battery.level ?? specs?.battery?.level ?? null,
+    why: battery.detail,
+    userPlugged,
+    setUserPlugged,
+    recheck,
+    checking,
+  }
   const est = specs ? estimateWatts(specs) : { watts: 0, why: '' }
   const watts = devWatts ?? override ?? est.watts
   const tier = tierFor(watts)
@@ -60,10 +76,7 @@ export default function MainPage({ cards, tap, dev, onShowGate }) {
         setOverride={setOverride}
         tier={tier}
         bonus={bonus}
-        powered={powered}
-        batteryKnown={batteryKnown}
-        userPlugged={userPlugged}
-        setUserPlugged={setUserPlugged}
+        power={power}
         stamped={stamped}
         onStamped={onStamped}
         instant={instant}
