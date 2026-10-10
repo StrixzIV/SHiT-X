@@ -14,7 +14,7 @@ export function WavyText({ text, className = '' }) {
 }
 
 // Number that tweens to its target and "pops" whenever it changes.
-export function CountUp({ value, ms = 600, className = '' }) {
+export function CountUp({ value, ms = 600, className = '', format = (v) => v.toLocaleString('en-US') }) {
   const [shown, setShown] = useState(value)
   const from = useRef(value)
   useEffect(() => {
@@ -33,7 +33,7 @@ export function CountUp({ value, ms = 600, className = '' }) {
   }, [value, ms])
   return (
     <span key={value} className={`pop ${className}`}>
-      {shown.toLocaleString('en-US')}
+      {format(shown)}
     </span>
   )
 }

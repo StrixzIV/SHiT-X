@@ -1,34 +1,28 @@
 import { useEffect, useState } from 'react'
 import PortalHeader from './components/PortalHeader.jsx'
-import ProbePage from './pages/ProbePage.jsx'
-import BriefingPage from './pages/BriefingPage.jsx'
+import AgreementGate from './components/AgreementGate.jsx'
+import MainPage from './pages/MainPage.jsx'
 import { useProbes } from './probes/useProbes.js'
 import { setSound } from './fx/sfx.js'
 
-export default function App() {
-  const [hash, setHash] = useState(location.hash)
-  const [sound, setSoundState] = useState(true)
-  const [voucher, setVoucher] = useState(false)
-  // Probes live at the app root so open ports/streams survive page switches.
-  const { cards, tap } = useProbes()
+// ?dev skips the agreement and the appraisal ceremony and shows the dev panel.
+const DEV = new URLSearchParams(location.search).has('dev')
 
-  useEffect(() => {
-    const on = () => setHash(location.hash)
-    addEventListener('hashchange', on)
-    return () => removeEventListener('hashchange', on)
-  }, [])
+export default function App() {
+  const [agreed, setAgreed] = useState(DEV) // never persisted: read it every time
+  const [sound, setSoundState] = useState(true)
+  // Probes live at the app root so open ports/streams survive overlays.
+  const { cards, tap } = useProbes()
 
   useEffect(() => setSound(sound), [sound])
 
-  const page = hash.startsWith('#/briefing') ? 'briefing' : 'probe'
-
   return (
-    <div className={`app page-${page}`}>
-      <PortalHeader page={page} sound={sound} onSound={() => setSoundState(!sound)} dark={page === 'probe'} />
-      {page === 'probe' ? (
-        <ProbePage cards={cards} tap={tap} voucher={voucher} />
+    <div className="app">
+      <PortalHeader sound={sound} onSound={() => setSoundState(!sound)} />
+      {agreed ? (
+        <MainPage cards={cards} tap={tap} dev={DEV} onShowGate={() => setAgreed(false)} />
       ) : (
-        <BriefingPage voucher={voucher} setVoucher={setVoucher} />
+        <AgreementGate onAccept={() => setAgreed(true)} dev={DEV} />
       )}
     </div>
   )

@@ -1,38 +1,44 @@
-// Balatro-style scoring: every live probe adds chips (its reading) and either
-// +Mult or ×Mult. Final "voltage" = chips × mult. Beat the blind (Thai mains) = leak.
-export const BLIND = 220
+import { si } from './format.js'
 
-const HANDS = [
-  { min: 0, name: 'น้ำเปล่า', en: 'High Card', chips: 10, mult: 1 },
-  { min: 1, name: 'ไฟรั่วเดี่ยว', en: 'Pair', chips: 20, mult: 2 },
-  { min: 2, name: 'รั่วสองสาย', en: 'Two Pair', chips: 30, mult: 2 },
-  { min: 3, name: 'สามสายจุ่มน้ำ', en: 'Three of a Kind', chips: 40, mult: 3 },
-  { min: 4, name: 'บ้านทั้งหลังมีไฟ', en: 'Full House', chips: 50, mult: 4 },
-  { min: 5, name: 'ชักโครก', en: 'Flush 🚽', chips: 80, mult: 6 },
-]
+// Balatro-style hand: chips from the brick and the specs, +Mult from every
+// live peripheral (USB-C counts double), then the tier hits as ×Mult.
+// Nothing powered → the mult is crushed to ×0 → safe.
+// `steps` is the order the calculation screen plays them in.
 
-export function handFor(liveCount) {
-  return HANDS.findLast((h) => liveCount >= h.min)
-}
+export const peripheralWeight = (p) => (p.id === 'placebo' ? 0.5 : p.port === 'USB-C' ? 2 : 1)
 
-// Returns the ordered steps the UI animates, plus the final tally.
-export function scoreHand(cards, { voucher = false } = {}) {
-  const live = cards.filter((c) => c.supported && c.live)
-  const hand = handFor(live.length)
-  let chips = hand.chips
-  let mult = hand.mult + (voucher ? 1 : 0)
+export function computeScore({ watts, bonus, tier, peripherals, powered, fakeUsbC = 0 }) {
+  const fake = Array.from({ length: fakeUsbC }, (_, i) => ({ id: `dev-${i}`, name: 'USB-C ปลอม', port: 'USB-C', supported: true, live: true }))
+  const live = [...peripherals, ...fake].filter((p) => p.supported && p.live)
+  const on = powered || live.length > 0
   const steps = []
-  for (const c of live) {
-    chips += c.reading
-    steps.push({ id: c.id, kind: 'chips', text: `+${c.reading}`, chips, mult })
-    if (c.xmult) {
-      mult *= c.xmult
-      steps.push({ id: c.id, kind: 'xmult', text: `X${c.xmult}`, chips, mult })
-    } else if (c.mult) {
-      mult += c.mult
-      steps.push({ id: c.id, kind: 'mult', text: `+${c.mult}`, chips, mult })
-    }
+  let chips = 0
+  let mult = 1
+  const push = (s) => steps.push({ ...s, chips, mult })
+
+  chips += watts
+  push({ id: 'brick', label: 'หัวชาร์จ', sub: si(watts), kind: 'chips', value: watts })
+  if (bonus) {
+    chips += bonus
+    push({ id: 'spec', label: 'สเปกเครื่อง', sub: 'CPU · RAM · จอ', kind: 'chips', value: bonus })
   }
-  const total = chips * mult
-  return { hand, steps, chips, mult, total, leak: total >= BLIND }
+  for (const p of live) {
+    const w = peripheralWeight(p)
+    mult += w
+    push({ id: p.id, label: p.name, sub: p.port, kind: 'mult', value: w })
+  }
+  const mult2 = mult
+  mult *= tier.mult
+  push({ id: 'tier', label: `ระดับ ${tier.id}`, sub: tier.title, kind: 'xmult', value: tier.mult })
+  if (!on) {
+    mult = 0
+    push({ id: 'nopower', label: 'ไม่มีไฟเข้า', sub: 'ทุกอย่างคูณศูนย์', kind: 'zero', value: 0 })
+  }
+
+  const total = Math.round(chips * mult)
+  return { chips, mult1: tier.mult, mult2, mult, total, live, powered: on, level: levelFor(total), steps }
 }
+
+// 6 = nuke (≥ 100M), 7 = black hole (≥ 1e15)
+const LEVELS = [0, 1, 2000, 8000, 30000, 100000, 1e8, 1e15]
+export const levelFor = (total) => LEVELS.findLastIndex((min) => total >= min)

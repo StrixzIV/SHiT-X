@@ -1,19 +1,15 @@
-import { LogIn, Volume2, VolumeX, Zap } from 'lucide-react'
+import { Crown, LogIn, Volume2, VolumeX } from 'lucide-react'
 
-export default function PortalHeader({ page, sound, onSound, dark }) {
+export default function PortalHeader({ sound, onSound }) {
   return (
-    <header className={`portal ${dark ? 'dark' : ''}`}>
-      <a href="#/" className="portal-brand">
-        <span className="portal-logo"><Zap size={20} fill="currentColor" /></span>
+    <header className="portal">
+      <div className="portal-brand">
+        <span className="portal-logo"><Crown size={18} /></span>
         <span>
-          <b>KMITL STUPID LAB</b>
-          <small>Flood Electricity Division · iLeak</small>
+          <b>iLeak <em>Prestige</em></b>
+          <small>KMITL STUPID LAB · Flood Electricity Division</small>
         </span>
-      </a>
-      <nav className="portal-nav">
-        <a href="#/" className={page === 'probe' ? 'on' : ''}>⚡ เช็คไฟรั่ว</a>
-        <a href="#/briefing" className={page === 'briefing' ? 'on' : ''}>📖 อ่านก่อนจุ่ม</a>
-      </nav>
+      </div>
       <div className="portal-tools">
         <button type="button" onClick={onSound} aria-label={sound ? 'ปิดเสียง' : 'เปิดเสียง'}>
           {sound ? <Volume2 size={18} /> : <VolumeX size={18} />}

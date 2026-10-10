@@ -8,18 +8,18 @@ The first version (agy/Gemini) did all detection through one browser API, `navig
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│  UI (React)                                                        │
-│   ProbePage (main) ─ JokerCard × N ─ ScorePanel ─ CashOut          │
-│   BriefingPage (old stages 1 + 2)                                  │
-│   fx/: SwirlBackground (WebGL), sfx (WebAudio), juice (CSS)        │
+│  AgreementGate (every load) → MainPage                             │
+│   1 Appraisal: spec readout → wattage dial → tier stamp (mult₁)    │
+│   2 Peripherals: tap to connect, each live one raises mult₂        │
+│   3 HoldButton → CalcOverlay: fake compute → tally → level FX      │
+│  fx/: SwirlBackground (WebGL) · Chaos · sfx (WebAudio) · juice     │
 ├────────────────────────────────────────────────────────────────────┤
-│  game/score.js — pure: cards → steps[] + { chips, mult, total }    │
+│  appraisal/specs.js — read specs, estimate brick watts, tiers      │
+│  game/score.js      — pure: chips × mult₁ × mult₂ → total, level   │
 ├────────────────────────────────────────────────────────────────────┤
 │  probes/useProbes.js — owns adapter lifecycle, merges state        │
 ├────────────────────────────────────────────────────────────────────┤
 │  probes/adapters/* — one file per wired interface                  │
-│   serial · battery · webusb · webhid · audio · gamepad ·           │
-│   display · otg · ethernet · native · placebo                      │
 ├────────────────────────────────────────────────────────────────────┤
 │  Platform: Web APIs  │  Native shell bridge (window 'ileak:native') │
 └────────────────────────────────────────────────────────────────────┘
@@ -45,11 +45,68 @@ Adapters never import React. To add a port, write one file and add it to `probes
 
 `useProbes` lives in `App`, not in a page, so open serial ports and mic streams keep running when you switch pages.
 
+### Appraisal (`appraisal/specs.js`)
+
+Browsers never expose charger wattage, so `estimateWatts` infers the brick from hardware class and takes the highest match:
+
+- GPU name from `WEBGL_debug_renderer_info` (RTX xx80/90 Laptop → 280 W, desktop RTX → PSU 650–1000 W, Apple M Max → 140 W, iGPU → 65 W, flagship Adreno → 45 W, …)
+- CPU threads (≥ 24 → 280 W "HX class", ≥ 16 → 140 W). Hybrid-graphics laptops often show the iGPU to the browser, so this catches them.
+- a live reading from `battery.chargingTime` when charging (assumed 80 Wh laptop / 17 Wh phone)
+- the user can override the wattage; it is labelled "self-declared"
+
+| Tier | Brick | mult₁ | |
+|---|---|---|---|
+| Ω | ≥ 1e40 W | 9999 | ผู้สร้างจักรวาล |
+| K-II | ≥ 3.8e26 W (the Sun) | 987 | Kardashev II |
+| K-I | ≥ 1e16 W (a planet) | 610 | Kardashev I |
+| TW | ≥ 1 TW | 377 | ดวงอาทิตย์พกพา |
+| GW | ≥ 1 GW | 233 | 1.21 จิกะวัตต์! |
+| MW | ≥ 1 MW | 144 | เจ้าของเขื่อน |
+| kW | ≥ 10 kW | 89 | เครื่องปั่นไฟงานวัด |
+| SSSS | ≥ 2 kW | 55 | หม้อหุงข้าว 10 ใบ |
+| SSS | ≥ 600 W | 21 | |
+| SS | ≥ 330 W | 13 | |
+| S | ≥ 200 W | 8 | 280 W gaming laptop |
+| A | ≥ 100 W | 5 | |
+| B | ≥ 61 W | 3 | |
+| C | ≥ 30 W | 2 | |
+| D | ≥ 10 W | 1.5 | |
+| F | < 10 W | 1 | |
+
+Auto-detection never goes past ~1 kW. Anything higher comes from the wattage list or dev mode. Above 1 kW the dial needle breaks loose and spins.
+
 ### Scoring (`game/score.js`)
 
-Balatro rules: hand base chips/mult come from the number of live probes (High Card = plain water … *Flush 🚽* = 5+ cables). Then, in hand order, each live card adds its `reading` to chips and applies `+mult` or `×mult`. Total volts = chips × mult. If the total reaches **220 V** (Thai mains, the "Boss Blind"), the result is a leak. Signing the consent form on the briefing page gives a +1 Mult voucher.
+The result is a Balatro hand, and `computeScore` returns the `steps` the calculation screen plays one by one, each with its own sound:
 
-The function is pure and returns the step list, so the UI can animate it one step at a time.
+1. **Chips**: the brick watts, then the spec bonus (threads × 10 + RAM GB × 8 + screen megapixels × 10)
+2. **+Mult**: one per live peripheral (USB-C +2, other ports +1, Placebo +0.5), starting from 1. The battery is excluded because it decides "powered" instead.
+3. **×Mult**: the tier multiplier
+4. **×0**: if nothing is powered (not charging and no live peripheral) → total 0 → safe
+
+total = chips × mult. The FX level comes from the total:
+
+| Level | Total | Effects |
+|---|---|---|
+| 0 | 0 | calm water, bubbles, soft chime |
+| 1 | > 0 | shake, sparks |
+| 2 | ≥ 2,000 | red swirl, flames, boom |
+| 3 | ≥ 8,000 | lightning, white flashes, RGB glitch, hue cycling |
+| 4 | ≥ 30,000 | emoji rain, wobble |
+| 5 | ≥ 100,000 | fake BSOD + siren, spin |
+| 6 | ≥ 1e8 | nuke flash, strobing invert, emergency news ticker |
+| 7 | ≥ 1e15 | the universe gets sucked into a black hole, then a big bang |
+
+## Dev mode
+
+Open with **`?dev`** (e.g. `http://localhost:5173/?dev`). It skips the agreement and the appraisal animation, makes the hold button 0.3 s, and shows a panel (bottom-left, collapsible) where you can:
+
+- set any wattage (`280`, `1.21e9`, `1e42`) or jump to any tier
+- force power on / off / auto
+- add fake USB-C peripherals (+2 mult each)
+- set animation speed to 1× / 3× / 10×
+- fire the real score, or fire any FX level L0–L7 directly
+- replay the appraisal animation, or reopen the agreement
 
 ## Device support matrix
 
@@ -106,8 +163,8 @@ The shell sets `window.ILeakNative` (optionally with `ready()`), and the Native 
 
 The web app needs no changes for this. The bridge is only another adapter.
 
-## Pages
+## Flow
 
-- **`#/` เช็คไฟรั่ว (main)**: Balatro table. The WebGL swirl background changes mood (calm water → purple when a cable is live → red/orange on a leak). It also has CRT scanlines, floating and tilting holographic joker cards, chip/mult pop-ups, screen shake, a score that catches fire, and a pentatonic tally chime.
-- **`#/briefing` อ่านก่อนจุ่ม**: old stages 1 + 2 merged into one page in serious university-portal style. It's written to be read top to bottom until you realize how dumb it is. Ends with a real safety line (PEA 1129 / MEA 1130).
-- **Cash out (modal)**: old stage 4. Shows the result, Shopee electrical tape, the funeral chant, and the certificate.
+- **Agreement gate**: shown on every load, never remembered. Facts unlock one at a time, and each "read" button counts down by text length. After that, every safety box and the consent must be ticked. The main page is not rendered until then.
+- **Main page**: an elitist, staged reveal. The spec lines type out, the dial needle swings to the brick wattage, and the tier stamp slams down. Peripherals unlock after the stamp. The final number is shown only as `???` until the user holds the button.
+- **Calculation overlay**: the scoring cards trigger one by one (chips / +Mult / ×Mult / ×0, with pop-ups and sounds whose pitch climbs) → the total ticks up → level FX → result sheet with Shopee tape, funeral chant and certificate.
