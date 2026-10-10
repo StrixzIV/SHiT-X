@@ -1,5 +1,7 @@
 // Gamepad API: USB-C controllers work even on iOS Safari.
 // The analog sticks double as an analog voltmeter.
+import { insecure } from '../why.js'
+
 export default function gamepad() {
   return {
     id: 'gamepad',
@@ -9,7 +11,13 @@ export default function gamepad() {
     mult: 2,
     flavor: 'โยกก้าน = ไฟรั่วมากขึ้น',
     hint: 'เสียบจอยแล้วกดปุ่มใดก็ได้',
-    support: () => ('getGamepads' in navigator ? { ok: true } : { ok: false, why: 'ไม่มี Gamepad API' }),
+    // Chrome 86+ and Firefox 81+ return no gamepads on insecure origins.
+    support: () =>
+      !('getGamepads' in navigator)
+        ? { ok: false, why: 'เบราว์เซอร์นี้ไม่มี Gamepad API' }
+        : insecure
+          ? { ok: false, why: 'ต้องเปิดผ่าน https — Chrome / Firefox ซ่อนจอยบน http' }
+          : { ok: true },
     start(update) {
       let last = ''
       const poll = () => {

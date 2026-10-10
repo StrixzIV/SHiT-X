@@ -1,14 +1,33 @@
 // Tiny WebAudio synth. No asset files, works offline.
+// Everything plays through one master gain, so the mute button also silences
+// sounds (and scene music) that are already playing.
 let ctx
+let master
 let enabled = true
-export const setSound = (on) => { enabled = on }
+export function setSound(on) {
+  enabled = on
+  if (master) master.gain.setTargetAtTime(on ? 1 : 0, ctx.currentTime, 0.03)
+}
 
 function audio() {
   const AC = window.AudioContext || window.webkitAudioContext
   if (!AC) return null
-  ctx ??= new AC()
+  if (!ctx) {
+    ctx = new AC()
+    master = ctx.createGain()
+    master.gain.value = enabled ? 1 : 0
+    master.connect(ctx.destination)
+  }
   if (ctx.state === 'suspended') ctx.resume()
   return ctx
+}
+
+export const soundOn = () => enabled
+
+// For the result scenes (fx/audio.js): the shared context and the master bus.
+export function getAudio() {
+  const c = audio()
+  return c ? { ctx: c, master } : null
 }
 
 export function beep(freq = 440, dur = 0.12, type = 'square', vol = 0.12, slideTo) {
@@ -22,7 +41,7 @@ export function beep(freq = 440, dur = 0.12, type = 'square', vol = 0.12, slideT
   if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime + dur)
   g.gain.setValueAtTime(vol, c.currentTime)
   g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur)
-  o.connect(g).connect(c.destination)
+  o.connect(g).connect(master)
   o.start()
   o.stop(c.currentTime + dur + 0.02)
 }
@@ -80,7 +99,7 @@ export function boom(size = 1) {
   lp.type = 'lowpass'
   lp.frequency.value = 400 + size * 1200
   g.gain.value = 0.25 + size * 0.35
-  src.connect(lp).connect(g).connect(c.destination)
+  src.connect(lp).connect(g).connect(master)
   src.start()
 }
 
@@ -98,7 +117,7 @@ export function siren(seconds = 2) {
   depth.gain.value = 250
   g.gain.value = 0.08
   lfo.connect(depth).connect(o.frequency)
-  o.connect(g).connect(c.destination)
+  o.connect(g).connect(master)
   o.start()
   lfo.start()
   o.stop(c.currentTime + seconds)

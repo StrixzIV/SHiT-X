@@ -33,7 +33,10 @@ export async function readSpecs() {
   s.gpu = cleanGpu(gl)
 
   const [hi, gpu, bat, hz] = await Promise.all([
-    navigator.userAgentData?.getHighEntropyValues(['model', 'platform', 'platformVersion', 'architecture', 'bitness', 'formFactors']).catch(() => null),
+    // Android WebView (LINE / Facebook / IG in-app) has userAgentData but no getHighEntropyValues.
+    typeof navigator.userAgentData?.getHighEntropyValues === 'function'
+      ? navigator.userAgentData.getHighEntropyValues(['model', 'platform', 'platformVersion', 'architecture', 'bitness', 'formFactors']).catch(() => null)
+      : null,
     webgpuInfo(),
     navigator.getBattery?.().catch(() => null),
     refreshRate(),
@@ -46,16 +49,20 @@ export async function readSpecs() {
   }
   if (hi) {
     s.raw.uach = hi
-    s.platform = osName(hi.platform, hi.platformVersion)
+    if (hi.platform) s.platform = osName(hi.platform, hi.platformVersion)
     s.model = hi.model || s.model
     s.arch = hi.architecture ? `${hi.architecture}${hi.bitness ? `-${hi.bitness}` : ''}` : null
-    s.mobile = hi.mobile ?? s.mobile
+    s.mobile = s.mobile || !!hi.mobile
   }
   // Android WebViews / Firefox: no UA-CH, but older-style UAs still carry "Android 13; <model> Build/"
   const av = ua.match(/Android (\d+)/)
-  if (av && !hi) s.platform = `Android ${av[1]}`
+  if (av && !hi?.platformVersion) s.platform = `Android ${av[1]}`
   const am = ua.match(/Android [\d.]+; ([^;)]+?)(?: Build\/|\))/)
   if (!s.model && am && am[1] !== 'K' && !/^(Mobile|Tablet|wv)$/.test(am[1])) s.model = am[1].trim()
+  // Firefox reports a generic bucket ("GeForce GTX 980, or similar"), Safari always "Apple GPU",
+  // and Safari clamps hardwareConcurrency to 4 or 8 — flag them so the UI doesn't overclaim.
+  s.gpuMasked = /, or similar$|^Generic Renderer$|^Apple GPU$/i.test(s.gpu ?? '')
+  s.coresClamped = detectBrowser(ua).engine === 'WebKit'
   s.brand = androidBrand(s.model)
   if (s.brand) s.model = `${s.brand.brand} (${s.model})`
   s.special = specialDevice(ua, s.gpu ?? '')
@@ -182,20 +189,21 @@ export function estimateWatts(s) {
   }
 
   if (s.mobile) {
-    if (s.apple) consider(s.apple.watts, s.apple.watts >= 27 ? `${s.apple.model.split(' (')[0]} ชาร์จเร็ว USB-C` : s.apple.model.split(' (')[0])
+    if (s.apple) consider(s.apple.watts, s.apple.watts >= 27 ? `${s.apple.model.split(' (')[0]} ชาร์จเร็ว` : s.apple.model.split(' (')[0])
     else if (/Apple/i.test(g) || /^i(OS|PadOS)/.test(s.platform)) consider(20, 'อุปกรณ์ Apple')
     if (s.brand) consider(s.brand.watts, `${s.brand.brand} ชาร์จเร็ว`)
     if (/Adreno.*\b(7[3-9]\d|8\d\d)\b|Immortalis|Xclipse 9/i.test(g)) consider(45, 'มือถือเรือธง')
     else if (/Adreno|Mali|PowerVR|Xclipse/i.test(g)) consider(25, 'มือถือ Android')
   } else {
-    const rtx = g.match(/RTX\s*A?(\d{1,2})(\d{2})/i)
-    if (rtx) {
+    const rtx = !s.gpuMasked && g.match(/RTX\s*A?(\d{1,2})(\d{2})/i)
+    if (s.gpuMasked && /GeForce|NVIDIA/i.test(g)) consider(laptop ? 180 : 450, 'การ์ดจอแยก NVIDIA (เบราว์เซอร์ซ่อนรุ่นจริง)')
+    else if (rtx) {
       const t = +rtx[2]
       if (laptop) consider(t >= 80 ? 280 : t >= 70 ? 230 : t >= 60 ? 200 : 150, `RTX ${rtx[1]}${rtx[2]} Laptop`)
       else consider(t >= 90 ? 1000 : t >= 80 ? 850 : t >= 70 ? 750 : 650, `เดสก์ท็อป RTX ${rtx[1]}${rtx[2]} (PSU)`)
     } else if (/GTX|Quadro|RTX/i.test(g)) consider(laptop ? 180 : 550, 'การ์ดจอแยก NVIDIA')
-    if (/Radeon\s*(RX|Pro)\s*\d/i.test(g)) consider(laptop ? 230 : 800, 'การ์ดจอแยก AMD')
-    if (/Arc\s*A\d{3}/i.test(g)) consider(laptop ? 150 : 600, 'Intel Arc แยก')
+    if (!s.gpuMasked && /Radeon\s*(RX|Pro)\s*\d/i.test(g)) consider(laptop ? 230 : 800, 'การ์ดจอแยก AMD')
+    if (!s.gpuMasked && /Arc\s*A\d{3}/i.test(g)) consider(laptop ? 150 : 600, 'Intel Arc แยก')
     if (/Apple M\d\s*Ultra/i.test(g)) consider(480, 'Mac Studio Ultra')
     else if (/Apple M\d\s*Max/i.test(g)) consider(140, 'MacBook Pro Max')
     else if (/Apple M\d\s*Pro/i.test(g)) consider(96, 'MacBook Pro')

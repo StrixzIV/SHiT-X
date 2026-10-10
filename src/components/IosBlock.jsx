@@ -64,7 +64,7 @@ export default function IosBlock() {
       {appeal && <p key={appeal} className="ios-appeal">❌ {appeal}</p>}
 
       <p className="ios-fine">
-        เรื่องจริง: ทุกเบราว์เซอร์บน iOS ใช้เอนจิน WebKit ของ Apple ซึ่งไม่ให้เว็บอ่านสถานะชาร์จ, USB, Serial หรือ MIDI เลย เราจึงประเมินอะไรไม่ได้
+        เรื่องจริง: ในไทยทุกเบราว์เซอร์บน iPhone / iPad ใช้เอนจิน WebKit ของ Apple ซึ่งไม่ให้เว็บอ่านสถานะชาร์จ, USB, Serial, HID หรือ MIDI เลย เราจึงประเมินอะไรไม่ได้
       </p>
     </main>
   )

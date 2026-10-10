@@ -41,7 +41,9 @@ export function detectBrowser(ua = navigator.userAgent) {
   if (brave) name = 'Brave'
   const engine = ios ? 'WebKit' : /Firefox\//.test(ua) ? 'Gecko' : /Chrome\/|Chromium/.test(ua) ? 'Blink' : /Safari\//.test(ua) ? 'WebKit' : '?'
   const label = inApp ? `แอป ${inApp}` : ios && name !== 'Safari' ? `${name} (ไส้ใน WebKit)` : name
-  return { name, label, inApp, ios, android, brave, engine }
+  // Android System WebView (what LINE / Facebook / IG use on Android): Battery works, WebUSB / Serial / HID don't.
+  const webview = android && /; wv\)/.test(ua)
+  return { name, label, inApp, ios, android, brave, engine, webview }
 }
 
 // How to get out of an in-app browser into a real one.

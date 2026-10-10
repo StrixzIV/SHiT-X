@@ -1,3 +1,5 @@
+import { HTTPS, browser, insecure } from '../why.js'
+
 // WebUSB / WebHID: any device you plug into the port counts as a "probe".
 // Chips come from the USB spec version, because USB 3.2 is obviously more voltage.
 function makeBus({ id, name, label, api, xmult, mult, why, chips }) {
@@ -17,7 +19,13 @@ function makeBus({ id, name, label, api, xmult, mult, why, chips }) {
       id, name, label, port: 'USB-C', xmult, mult,
       flavor: 'เสียบอะไรก็ได้ เรานับหมด',
       hint: 'แตะเพื่ออนุญาตอุปกรณ์',
-      support: () => (api in navigator ? { ok: true } : { ok: false, why }),
+      support: () =>
+        // Android WebView exposes navigator.usb but it does nothing (crbug.com/41441927).
+        browser.webview
+          ? { ok: false, why: api === 'usb' ? 'เบราว์เซอร์ในแอปมีปุ่ม USB ให้แต่ใช้ไม่ได้จริง — เปิดใน Chrome' : 'เบราว์เซอร์ในแอปไม่มี WebHID — เปิดใน Chrome บนคอม' }
+          : api in navigator
+            ? { ok: true }
+            : { ok: false, why: insecure ? HTTPS : why },
       start(u) {
         update = u
         navigator[api].addEventListener('connect', refresh)
@@ -43,7 +51,7 @@ export const webusb = makeBus({
   label: 'แฟลชไดรฟ์ ฮับ หรืออะไรก็ได้ที่เสียบ USB',
   api: 'usb',
   xmult: 2,
-  why: 'ไม่มี WebUSB (iOS/Safari/Firefox)',
+  why: 'WebUSB มีเฉพาะ Chrome / Edge / Opera / Samsung Internet (Firefox, Safari, iOS ไม่มี)',
   chips: (d) => (d.usbVersionMajor ?? 2) * 100 + (d.usbVersionMinor ?? 0) * 10,
 })
 
@@ -53,6 +61,6 @@ export const webhid = makeBus({
   label: 'อุปกรณ์ HID ที่เสียบสาย',
   api: 'hid',
   mult: 3,
-  why: 'ไม่มี WebHID (iOS/Safari/Firefox)',
+  why: 'WebHID มีเฉพาะ Chrome / Edge / Opera บนคอม',
   chips: () => 150,
 })

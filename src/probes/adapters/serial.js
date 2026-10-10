@@ -1,5 +1,7 @@
 // Web Serial: the iLeak Probe (our own wired device) streams lines like
 // "ILEAK/1 mv=1234" over USB CDC. Any line with a number is accepted.
+import { FIREFOX_ADDON, HTTPS, browser, chromeMajor, insecure } from '../why.js'
+
 const BAUD = 115200
 
 export function parseLine(line) {
@@ -68,9 +70,21 @@ export default function serial() {
     port: 'USB-C',
     xmult: 3,
     flavor: 'ESP32/RP2040 + สายไฟ 2 เส้น',
-    hint: 'แตะเพื่อเลือกพอร์ต',
+    // Chrome Android 138–147 only lists Bluetooth serial ports; USB arrives in 148.
+    hint: `แตะเพื่อเลือกพอร์ต${FIREFOX_ADDON}${browser.android && chromeMajor && chromeMajor < 148 ? ' (Chrome รุ่นนี้เห็นแค่พอร์ต Bluetooth)' : ''}`,
     support: () =>
-      'serial' in navigator ? { ok: true } : { ok: false, why: 'ไม่มี Web Serial (ใช้ Chrome/Edge บนคอม หรือ Android)' },
+      browser.webview
+        ? { ok: false, why: 'เบราว์เซอร์ในแอปไม่มี Web Serial — เปิดใน Chrome' }
+        : 'serial' in navigator
+        ? { ok: true }
+        : {
+            ok: false,
+            why: browser.brave
+              ? 'Brave ปิด Web Serial ไว้ (เปิดได้ที่ brave://flags)'
+              : insecure
+                ? HTTPS
+                : 'Web Serial มีใน Chrome / Edge / Opera บนคอม, Chrome Android 148+ และ Firefox 151+ บนคอม',
+          },
     start(u) {
       update = u
       navigator.serial.addEventListener('connect', onConnect)

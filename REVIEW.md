@@ -1,0 +1,261 @@
+# iLeak — Hand Review Checklist
+
+Every state can be reached by ticking **DEV** (top right, always visible; `?dev` works too). Section 7 lists everything the dev panel can do.
+
+Values below are taken from the code after the fact-check round (October 2026).
+
+---
+
+## 1. Tier list (`src/appraisal/specs.js`)
+
+Tier comes from the charger wattage; mult₁ is its multiplier.
+
+| ✓ | Tier | From | mult₁ | Title | Remark |
+|---|---|---|---|---|---|
+| [ ] | Ω | 1e40 W | 9999 | ผู้สร้างจักรวาล | ท่านไม่ได้ใช้ไฟฟ้า ไฟฟ้าใช้ท่าน |
+| [ ] | K-II | 3.8e26 W | 987 | อารยธรรมกินดวงอาทิตย์ (Kardashev II) | หัวชาร์จของท่านคือทรงกลมไดสันรอบดวงอาทิตย์ |
+| [ ] | K-I | 1e16 W | 610 | เจ้าของดาวเคราะห์ (Kardashev I) | พลังงานทั้งโลกถูกใช้ชาร์จมือถือของท่านเครื่องเดียว |
+| [ ] | TW | 1 TW | 377 | ดวงอาทิตย์พกพา | การไฟฟ้าทั้งประเทศขอสมัครเป็นลูกน้องท่าน |
+| [ ] | GW | 1 GW | 233 | 1.21 จิกะวัตต์! | Great Scott! ท่านย้อนเวลากลับไปก่อนน้ำท่วมได้แล้ว |
+| [ ] | MW | 1 MW | 144 | เจ้าของเขื่อนส่วนตัว | เขื่อนภูมิพลส่งการ์ดวันเกิดให้ท่านทุกปี |
+| [ ] | kW | 10 kW | 89 | เครื่องปั่นไฟงานวัด | ท่านเปิดลำโพงหมอลำได้ทั้งตำบลจากรูชาร์จ |
+| [ ] | SSSS | 2 kW | 55 | หม้อหุงข้าว 10 ใบพร้อมกัน | ปลั๊กพ่วงในบ้านท่านละลายไปแล้ว 3 อัน |
+| [ ] | SSS | 600 W | 21 | โรงไฟฟ้าส่วนบุคคล | ท่านไม่ได้มาตรวจไฟรั่ว ท่านคือต้นเหตุของไฟรั่ว |
+| [ ] | SS | 330 W | 13 | มหาเศรษฐีพลังงาน | การไฟฟ้าส่งกระเช้าปีใหม่ให้ท่านทุกปี |
+| [ ] | S | 200 W | 8 | ชนชั้นปกครองแห่งปลั๊กพ่วง | หัวชาร์จของท่านหนักกว่าแมวของคนทั่วไป |
+| [ ] | A | 100 W | 5 | ผู้ดีมีวัตต์ | น่านับถือ แต่ยังไม่ได้นั่งโต๊ะเดียวกับระดับ S |
+| [ ] | B | 61 W | 3 | ชนชั้นกลางสาย USB-C | 65W คือค่าเฉลี่ยของคนธรรมดา ซึ่งก็คือท่าน |
+| [ ] | C | 30 W | 2 | ผู้ใช้ทั่วไป | ระบบยินดีให้บริการ ด้วยความอดทน |
+| [ ] | D | 10 W | 1.5 | ผู้ชาร์จช้า | กรุณาใช้ทางเข้าด้านหลัง |
+| [ ] | F | 0 W | 1 | สามัญชน 5 วัตต์ | อุปกรณ์ของท่านไม่ผ่านเกณฑ์ความหรูหรา แต่เราจะตรวจให้เพราะสงสาร |
+
+- [ ] **Fanfare:** S and above (mult₁ ≥ 8) play a 4-note fanfare when the stamp lands
+- [ ] **Letter styles:**
+  - F: rotated red
+  - B: bronze
+  - A: silver
+  - S: gold shine
+  - SS / SSS: rainbow
+  - SSSS: rainbow with jitter
+  - kW: fire
+  - MW: blue pulse
+  - GW: lightning flicker
+  - TW: sun glow
+  - K-I: Earth
+  - K-II: spinning sun
+  - Ω: black glowing letter that spins
+- [ ] **Card shake:** SSSS and above also make the whole tier card quake
+
+**Wattage dropdown:** 5, 10, 20, 45, 65, 100, 140, 240, 280, 330, 500 W, 1 kW, 3 kW, 25 kW, 5 MW, 1.21 GW, 1 TW, 1e17, 3.8e26, 1e42 W
+
+---
+
+## 2. Meter (`src/appraisal/meters.js`)
+
+The meter changes with wattage, so the needle always stays on the scale.
+
+| ✓ | Range | Instrument | Note |
+|---|---|---|---|
+| [ ] | 5 W – 1 kW | มัลติมิเตอร์ตลาดนัด | ราคา 99 บาท |
+| [ ] | ≤ 1 MW | มิเตอร์หน้าบ้านการไฟฟ้า | ยืมมาจากเสาไฟ |
+| [ ] | ≤ 1 GW | แผงควบคุมโรงไฟฟ้า | ยกมาทั้งห้องควบคุม |
+| [ ] | ≤ 1 TW | ฟลักซ์คาพาซิเตอร์ | ถอดจาก DeLorean |
+| [ ] | ≤ 1e17 W | หอดูดาวสุริยะ | วัดแสงอาทิตย์ทั้งดวง |
+| [ ] | ≤ 1e27 W | มาตรวัดคาร์ดาเชฟ | ระดับอารยธรรม 0 → II |
+| [ ] | above | มาตรวัดพลังพระเจ้า | ไม่มีหน่วย มีแต่ศรัทธา |
+
+---
+
+## 3. Scoring (`src/game/score.js`)
+
+- **Chips** = watts + spec bonus (threads × 10 + RAM GB × 8 + screen megapixels × 10 + Hz / 2)
+- **mult₂** = 1 + one step per live peripheral: USB-C +2, other ports +1, ปุ่มจำลอง +0.5
+- **Total** = chips × mult₂ × mult₁. If nothing is powered, the last card is **×0**, so the total is 0.
+
+Order of the cards in the calculation:
+
+- [ ] หัวชาร์จ (+chips)
+- [ ] สเปกเครื่อง (+chips)
+- [ ] each live peripheral (+Mult)
+- [ ] ระดับ X (×Mult)
+- [ ] ไม่มีไฟเข้า (X0, only when unpowered)
+- [ ] the total counts up with ticking sounds
+
+---
+
+## 4. Result scenes, verdicts and responders (`src/fx/CalcOverlay.jsx`, `src/fx/scenes/`, `src/game/responders.js`)
+
+- [ ] Loading: black page, white motes drifting slowly around the centre, the Balatro tally (cards + chips × mult + sounds), then the total ticks up
+- [ ] Then a hard cut (no transition) to the level's scene; the result sheet slides up over it later, with "<total> V" and the verdict at the top
+- [ ] Closing the sheet ("ประเมินใหม่") stops the scene's sound
+- [ ] The speaker button in the header mutes the scene sound mid-scene
+
+| ✓ | Lvl | Total ≥ | Verdict | Scene | Sound | Who responds |
+|---|---|---|---|---|---|---|
+| [ ] | 0 | 0 | ปลอดภัย | Famicom-style underwater stage that fills any screen (wide, ultrawide, portrait), phone diver with a cable tail, HUD shows the score, Claude's mascot in a hard hat swims across with a "BUILDING iLEAK..." bubble | chiptune waltz + bubbles + bloop | แม่ |
+| [ ] | 1 | 1 | ไฟรั่วเล็กน้อย | XP-style blue screen + sparks + a little smoke, memory dump % counts up | 8-bit crackle, hum | ช่างไฟปากซอย (→ ฿15 tape) |
+| [ ] | 2 | 2,000 | ไฟรั่วระดับหรู | Hard cut to the heaven stairway, slow zoom, rays, sparkles | angel choir + harp | การไฟฟ้า (กฟน. / กฟภ.) |
+| [ ] | 3 | 8,000 | ไฟรั่วระดับพรีเมียม | Storm and rain; the figure only shows during lightning | crack + rumble per strike | ปภ. |
+| [ ] | 4 | 30,000 | น้ำท่วมทั้งซอยมีไฟ | Purple skeleton photo shaking, X-ray flicker, arcs | buzz + "FAHHH" ×2 | กรมทหารช่าง |
+| [ ] | 5 | 100,000 | หายนะระดับชาติ | GBA flash + stripe wipe → battle vs PLUGCHU: your THUNDER → "ได้ผลไม่ค่อยดี..." → absorbs 220V → its THUNDER → 0/20 → หมดสภาพ | jingle, battle loop, attack / drain / faint effects | UN |
+| [ ] | 6 | 1e8 | ภัยพิบัติระดับหมอลำ | Military display: radar, flashing title, DEFCON หมอลำ 1, radio log with the live voltage | static, squelch, roger beeps, Morse, siren (+ Thai voice if available) | NASA + IAEA |
+| [ ] | 7 | 1e15 | จักรวาลถูกรีสตาร์ท | Gargantua: 3D lensed black hole, orbiting camera | distorted space drone, slow pitch bend | เบื้องบน (→ funeral chant) |
+
+**Drop-in files (`public/fx/`, all optional; a missing file falls back to the built-in version):**
+
+- [ ] `l0-underwater.mp3`
+- [ ] `l2-heaven.mp3`
+- [ ] `lowtiergod.png` / `.jpg` / `.webp` (a cut-out stands full-height, lit only by lightning)
+- [ ] `l4-fahh.mp3`, `fahh.mp3` or `fahhhhhhhhhhhhhh.mp3` (plays at the cut and ~2.6 s later)
+- [ ] `l5-battle.mp3`
+- [ ] `l5-opponent.png` / `.jpg` / `.webp` (plus the `OPPONENT` name in `L5Battle.jsx`)
+- [ ] `l6-radio.mp3`
+- [ ] `l7-space.mp3`
+
+- [ ] On the result sheet, every responder below the current level is crossed out with "เกินอำนาจ ส่งเรื่องต่อ" (beyond their authority, passed on)
+- [ ] The certificate button and "ประเมินใหม่" (re-assess) both work
+- [ ] Every result link opens a website, never a phone number
+
+---
+
+## 5. Screens and states
+
+### Entry
+
+- [ ] **iOS (iPhone / iPad, any browser):** joke screen showing
+  - the swaying apple
+  - a random excuse
+  - "ยื่นอุทธรณ์" (cycles 5 rejection lines)
+  - a share button
+  - no way through (only the DEV skip "ข้ามหน้าบล็อก iOS" gets past it)
+- [ ] **In-app browser** (LINE / FB / Messenger / IG / TikTok / WeChat / X): bottom banner with an escape link
+  - Android text: "อ่านแบตได้ แต่ USB / Serial ใช้ไม่ได้ และแอปอาจไม่ให้ใช้ไมค์และกล้อง"
+  - LINE: `?openExternalBrowser=1` link
+  - Android: Chrome `intent://` link
+  - iOS: instructions only
+  - On Android in-app browsers, the อุปกรณ์ USB / โพรบ iLeak / คีย์บอร์ด tiles are crossed out with "เบราว์เซอร์ในแอป…"
+  - The appraisal still loads in Android in-app browsers (they lack `getHighEntropyValues`)
+- [ ] **Plain `http://`:** bottom banner listing what is disabled (battery, USB, Serial, MIDI, mic, camera, gamepads)
+
+### Agreement gate
+
+- [ ] Facts 1–5 unlock one at a time; each "อ่านแล้ว" button counts down 2–4 s
+- [ ] Then 3 safety checkboxes plus consent (none pre-ticked), with the real 1129 / 1130 warning
+- [ ] The enter button stays disabled until every box is ticked
+- [ ] The gate shows again on every page load (never remembered)
+
+### Appraisal
+
+- [ ] Spec rows type out one by one, then the meter needle swings, then the tier stamp lands
+- [ ] **Power box, auto mode** (the browser can read the battery):
+  - [ ] ⚡ ตรวจพบไฟเข้าเครื่อง (charging detected)
+  - [ ] ยังไม่พบไฟเข้าเครื่อง: "ตรวจซ้ำ" button and the optional "ยืนยันเอง…" tick
+  - [ ] After "ตรวจซ้ำ" changes nothing: a "โหลดหน้าใหม่" button and a Linux / Chrome hint appear
+  - [ ] "โหลดหน้าใหม่" reloads and skips the agreement once; a normal reload shows it again
+- [ ] **Power box, forced manual mode** (Safari / Firefox / Brave / http; iOS only via the DEV skip):
+  - [ ] Gold pulsing box "เบราว์เซอร์นี้อ่านสถานะชาร์จไม่ได้ — ต้องชาร์จด้วยมือ" with the browser-specific reason
+  - [ ] "⚡ ชาร์จด้วยมือ" cranks a battery 0 → 100% with rising beeps, then "ชาร์จด้วยมือเรียบร้อย" (counts as powered)
+  - [ ] "ไม่ได้เสียบสาย" gives "ยืนยันว่าไม่ได้เสียบสาย" (safe path)
+  - [ ] "เปลี่ยนใจ" resets the answer
+  - [ ] Until an answer is given, the dip button is replaced by "⚡ ไปชาร์จด้วยมือก่อน (ขั้นที่ 1) ↑", which scrolls to the box
+- [ ] Spec rows are honest: Safari shows "(Safari ปัดเป็น 4 หรือ 8)"; RAM shows "(ปัดลง)" or "(สูงสุดที่เบราว์เซอร์ยอมบอก)"; masked GPUs show "เบราว์เซอร์ซ่อนรุ่นจริง"
+- [ ] Plugging or unplugging the charger mid-test updates within about 1 s (auto mode)
+- [ ] Choosing a wattage from the dropdown labels it "แจ้งเอง (ไม่ผ่านการรับรอง)" (self-declared)
+
+### Peripheral tiles
+
+Four states:
+
+- [ ] off: crossed out, "ตัดสิทธิ์" plus the reason
+- [ ] locked: gold "แตะเพื่อ…" (needs permission)
+- [ ] idle
+- [ ] live: gold border and a "⚡ เชื่อมต่อ" tag
+
+Tiles:
+
+| ✓ | Tile | Port | Weight |
+|---|---|---|---|
+| [ ] | โพรบ iLeak | USB-C | +2 |
+| [ ] | อุปกรณ์ USB | USB-C | +2 |
+| [ ] | แจ็คหูฟัง / ไมค์ | 3.5mm (+1) or USB-C (+2) | +1 / +2 |
+| [ ] | จอนอก | USB-C | +2 |
+| [ ] | คีย์บอร์ด / เมาส์ USB | USB-C | +2 |
+| [ ] | เครื่องดนตรี MIDI | USB-C | +2 |
+| [ ] | กล้อง USB | USB-C | +2 |
+| [ ] | จอยเกม | USB-C | +2 |
+| [ ] | เมาส์บนมือถือ | USB-C | +2 |
+| [ ] | สายแลน | Ethernet | +1 |
+| [ ] | แอปติดตั้ง | USB-C | +2 |
+| [ ] | ปุ่มจำลอง | ใจ | +0.5 |
+
+(สายชาร์จ has no tile; it only decides "powered".)
+
+### Final step
+
+- [ ] The formula shows `พลัง × mult₁ × mult₂ = ???`
+- [ ] The text under it switches between "มีไฟเข้า… ผลลัพธ์อาจรุนแรง" (powered) and "ไม่มีไฟเข้า… ปลอดภัย (และน่าเบื่อ)" (unpowered)
+- [ ] Hold-to-dip button: drains if you let go, fires at 100%
+
+---
+
+## 6. Device → wattage guesses (`src/appraisal/specs.js`, `src/appraisal/devices.js`)
+
+| ✓ | Device | Guess | Tier |
+|---|---|---|---|
+| [ ] | RTX xx80 / 90 Laptop, or a 24+ thread CPU | 280 W | S |
+| [ ] | Desktop RTX | 650–1000 W | SSS |
+| [ ] | Apple M Max | 140 W | A |
+| [ ] | Samsung S Ultra | 45 W | C |
+| [ ] | Xiaomi / Redmi / POCO | 67 W | B |
+| [ ] | realme GT | 240 W | S |
+| [ ] | OPPO / OnePlus, vivo | 80 W | B |
+| [ ] | Huawei / Honor | 66 W | B |
+| [ ] | Pixel | 27–30 W | D |
+| [ ] | Nintendo Switch | 39 W | C |
+| [ ] | Steam Deck | 45 W | C |
+| [ ] | Smart TV | 150 W | A |
+| [ ] | Tesla in-car browser | 250 kW | kW |
+| [ ] | iPhone / iPad | 20–35 W by screen size (only visible with the DEV skip) | blocked (joke screen) |
+
+---
+
+## 7. DEV panel (tick DEV, top right)
+
+- [ ] The tickbox is visible and tappable on every screen: agreement, iOS block, main page, and during the calculation (blue screen, black hole included). The header sits above every overlay.
+- [ ] Ticking it writes `?dev=1` to the URL, opens the panel under the tickbox, and ▾ / ▴ folds it
+- [ ] Unticking hides the panel and nothing dev-related applies anymore (no fake watts, no skips)
+
+**ข้าม (skips):**
+
+- [ ] ข้ามหน้าข้อตกลง: off brings the agreement back (with the panel still on top), on returns to the main page
+- [ ] ข้ามหน้าบล็อก iOS
+- [ ] ข้ามแอนิเมชันประเมิน (spec rows appear instantly)
+- [ ] ข้ามการบังคับชาร์จด้วยมือ (dip allowed without answering)
+- [ ] ข้ามการคำนวณ (straight to the result, effects still on)
+- [ ] ปุ่มกดค้างแค่ 0.3 วิ
+
+**ค่า / ยิง FX:**
+
+- [ ] Wattage box accepts `280`, `1.21e9`, `1e42`; "auto" clears it
+- [ ] Tier buttons F → Ω
+- [ ] Power auto / on / off
+- [ ] USB-C ปลอม − / +
+- [ ] Speed 1× / 3× / 10×
+- [ ] "คะแนนจริง" and L0–L7 work; they're disabled until the main page is showing
+
+**Stress test:**
+
+- [ ] วนทุกระดับ L0→L7: each result closes itself, and the last (L7) stays open
+- [ ] ยิงคะแนนจริง ×5
+- [ ] สุ่มวัตต์ 10 วิ: the meter and tier stamp keep switching (5 W … 1e42 W)
+- [ ] USB-C ปลอม ×50 (long scoring sequence)
+- [ ] โกลาหลสูงสุด: Ω + 30 fake devices + powered → L7
+- [ ] หยุด stops the sequence and the random wattage
+- [ ] แสดง FPS: green ≥ 50, yellow 30–49, red < 30. Check L6 / L7 on a real phone.
+
+**Tools:**
+
+- [ ] เล่นการประเมินใหม่ replays the typing, meter and stamp animation
+- [ ] เปิดข้อตกลง
+- [ ] รีเซ็ต restores the default skips and values
+- [ ] raw spec shows what the browser actually reported

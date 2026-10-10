@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { WATT_CHOICES } from '../appraisal/specs.js'
 import { beep } from '../fx/sfx.js'
 import { big, si } from '../game/format.js'
@@ -9,34 +9,36 @@ const short = (w) => si(w).replace(' ', '')
 
 function powerText(p) {
   const lvl = p.level != null ? ` · ${Math.round(p.level * 100)}%` : ''
-  if (p.known) return `${p.charging ? 'เสียบปลั๊กอยู่' : p.userPlugged ? 'ยืนยันเองว่าเสียบปลั๊ก' : 'ใช้แบตเตอรี่ (ไม่มีไฟเข้า)'}${lvl}`
-  return p.userPlugged ? 'ยืนยันเองว่าเสียบปลั๊ก' : 'เบราว์เซอร์ไม่บอก'
+  if (p.charging) return `เสียบปลั๊กอยู่${lvl}`
+  if (p.manual === true) return `ชาร์จด้วยมือ (ยืนยันเอง)${p.known ? lvl : ''}`
+  if (p.manual === false) return 'ยืนยันว่าไม่ได้เสียบสาย'
+  return p.known ? `ใช้แบตเตอรี่ (ไม่มีไฟเข้า)${lvl}` : 'เบราว์เซอร์ไม่บอก — ต้องชาร์จด้วยมือ'
 }
 
-// Charging state: re-check for browsers that miss the event, and a manual
-// tick for browsers (all of iOS) that never expose it.
-function PowerCheck({ power: p }) {
-  const status = p.charging ? '⚡ ตรวจพบไฟเข้าเครื่อง' : p.known ? 'ยังไม่พบไฟเข้าเครื่อง' : 'เบราว์เซอร์นี้ไม่บอกสถานะชาร์จ'
+// Battery readable: live status, re-check, then reload (Chromium only re-reads
+// the OS battery when a page subscribes fresh), plus an optional manual tick.
+function AutoCheck({ p }) {
   const hint = p.charging
     ? 'ระบบเฝ้าดูให้ตลอด ถอดสายเมื่อไหร่จะรู้ทันที'
-    : p.known
-      ? 'ระบบเฝ้าดูให้ตลอด เสียบแล้วยังไม่ขึ้นใน 2 วินาที? กดตรวจซ้ำ หรือติ๊กยืนยันเอง'
-      : p.why
+    : p.rechecked
+      ? 'ยังไม่ขึ้น? Chrome บางเครื่อง (เช่นบน Linux) อ่านแบตใหม่ได้ก็ต่อเมื่อโหลดหน้าใหม่ — หรือติ๊กยืนยันเอง'
+      : 'ระบบเฝ้าดูให้ตลอด เสียบแล้วยังไม่ขึ้นใน 2 วินาที? กดตรวจซ้ำ หรือติ๊กยืนยันเอง'
   return (
-    <div className={`power-check ${p.charging ? 'on' : !p.known && !p.userPlugged ? 'ask' : ''}`}>
+    <div className={`power-check ${p.charging ? 'on' : ''}`}>
       <div className="pc-text">
-        <b>{status}</b>
+        <b>{p.charging ? '⚡ ตรวจพบไฟเข้าเครื่อง' : 'ยังไม่พบไฟเข้าเครื่อง'}</b>
         <small>{hint}</small>
       </div>
       <div className="pc-actions">
-        {p.known && (
-          <button type="button" className="btn-line" onClick={p.recheck} disabled={p.checking}>
-            {p.checking ? 'กำลังตรวจ…' : 'ตรวจซ้ำ'}
-          </button>
+        <button type="button" className="btn-line" onClick={p.recheck} disabled={p.checking}>
+          {p.checking ? 'กำลังตรวจ…' : 'ตรวจซ้ำ'}
+        </button>
+        {!p.charging && p.rechecked && (
+          <button type="button" className="btn-line" onClick={p.reload}>โหลดหน้าใหม่</button>
         )}
         {!p.charging && (
           <label className="pc-tick">
-            <input type="checkbox" checked={p.userPlugged} onChange={(e) => p.setUserPlugged(e.target.checked)} />
+            <input type="checkbox" checked={p.manual === true} onChange={(e) => p.setManual(e.target.checked ? true : null)} />
             ยืนยันเองว่าเสียบสายชาร์จอยู่
           </label>
         )}
@@ -45,13 +47,79 @@ function PowerCheck({ power: p }) {
   )
 }
 
+// Battery not readable (iOS, Safari, Firefox, Brave, http): the user must charge
+// by hand — or swear it isn't plugged in — before the dip button unlocks.
+function ManualCharge({ p }) {
+  const [pct, setPct] = useState(null)
+  const timer = useRef(null)
+  useEffect(() => () => clearInterval(timer.current), [])
+
+  const crank = () => {
+    if (timer.current) return
+    let v = 0
+    setPct(0)
+    timer.current = setInterval(() => {
+      v += 10
+      setPct(v)
+      beep(260 + v * 7, 0.035, 'square', 0.05)
+      if (v >= 100) {
+        clearInterval(timer.current)
+        timer.current = null
+        beep(1046, 0.18, 'triangle', 0.12)
+        setPct(null)
+        p.setManual(true)
+      }
+    }, 80)
+  }
+
+  const cranking = pct != null
+  const [title, sub] =
+    p.manual === true
+      ? ['⚡ ชาร์จด้วยมือเรียบร้อย', 'ระบบเชื่อท่าน (เพราะไม่มีทางรู้อยู่แล้ว)']
+      : p.manual === false
+        ? ['🪫 ยืนยันว่าไม่ได้เสียบสาย', 'ผลลัพธ์จะออกมาปลอดภัย']
+        : ['เบราว์เซอร์นี้อ่านสถานะชาร์จไม่ได้ — ต้องชาร์จด้วยมือ', p.why]
+
+  return (
+    <div className={`power-check manual ${p.manual === null ? 'ask' : p.manual ? 'on' : ''}`}>
+      <div className="pc-text">
+        <b>{title}</b>
+        <small>{sub}</small>
+      </div>
+      {cranking && (
+        <div className="crank" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <span style={{ width: `${pct}%` }} />
+          <em>{pct}%</em>
+        </div>
+      )}
+      <div className="pc-actions">
+        {p.manual === null ? (
+          <>
+            <button type="button" className="btn-gold" onClick={crank} disabled={cranking}>
+              {cranking ? 'กำลังชาร์จด้วยมือ…' : '⚡ ชาร์จด้วยมือ'}
+            </button>
+            <button type="button" className="btn-line" onClick={() => p.setManual(false)} disabled={cranking}>
+              ไม่ได้เสียบสาย
+            </button>
+          </>
+        ) : (
+          <button type="button" className="btn-line" onClick={() => p.setManual(null)}>เปลี่ยนใจ</button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+const PowerCheck = ({ power }) => (power.known ? <AutoCheck p={power} /> : <ManualCharge p={power} />)
+
 function specLines(s, est, power) {
   return [
     ['ระบบปฏิบัติการ', [s.platform, s.arch, s.browser].filter(Boolean).join(' · ')],
     ['ประเภทเครื่อง', [s.form, s.model].filter(Boolean).join(' · ') || 'เครื่องไม่ยอมเปิดเผย (น่าสงสัย)'],
-    ['หน่วยประมวลผล', s.cores ? `${s.cores} เธรด` : 'ไม่เปิดเผย'],
-    ['หน่วยความจำ', s.memory ? (s.memory >= 8 ? `≥ ${s.memory} GB (เบราว์เซอร์ไม่ยอมบอกเกินนี้)` : `~${s.memory} GB`) : 'ไม่เปิดเผย (คนรวยมักเก็บเงียบ)'],
-    ['การ์ดจอ', [s.gpu || 'ไม่ทราบ (อาจเป็นมันฝรั่ง)', s.gpuArch && `สถาปัตย์ ${s.gpuArch}`].filter(Boolean).join(' · ')],
+    ['หน่วยประมวลผล', s.cores ? `${s.cores} เธรด${s.coresClamped ? ' (Safari ปัดเป็น 4 หรือ 8)' : ''}` : 'ไม่เปิดเผย'],
+    // Chrome rounds down and caps deviceMemory: 32 GB on desktop, 8 GB on Android (Chrome 147+).
+    ['หน่วยความจำ', s.memory ? `≥ ${s.memory} GB${s.memory >= (s.mobile ? 8 : 32) ? ' (สูงสุดที่เบราว์เซอร์ยอมบอก)' : ' (ปัดลง)'}` : 'ไม่เปิดเผย (คนรวยมักเก็บเงียบ)'],
+    ['การ์ดจอ', [s.gpu || 'ไม่ทราบ (อาจเป็นมันฝรั่ง)', s.gpuMasked && 'เบราว์เซอร์ซ่อนรุ่นจริง', s.gpuArch && `สถาปัตย์ ${s.gpuArch}`].filter(Boolean).join(' · ')],
     ['หน้าจอ', `${s.screen.w}×${s.screen.h}${s.screen.hz ? ` · ${s.screen.hz} Hz` : ''}${s.screen.extended ? ' · มีจอนอก' : ''}`],
     ['แหล่งพลังงาน', powerText(power)],
     ['อัตราชาร์จที่วัดได้', est.measured ? `~${est.measured} W` : 'วัดไม่ได้'],

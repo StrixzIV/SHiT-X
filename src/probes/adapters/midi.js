@@ -1,4 +1,6 @@
 // Web MIDI: USB keyboards, pads and DJ controllers. Every note you play adds chips.
+import { FIREFOX_ADDON, HTTPS, insecure } from '../why.js'
+
 export default function midi() {
   let access, update
   let notes = 0
@@ -34,8 +36,11 @@ export default function midi() {
     label: 'คีย์บอร์ดดนตรีหรือคอนโทรลเลอร์ USB',
     port: 'USB-C',
     mult: 2,
-    hint: 'แตะเพื่ออนุญาต MIDI',
-    support: () => ('requestMIDIAccess' in navigator ? { ok: true } : { ok: false, why: 'ไม่มี Web MIDI (Safari / iOS)' }),
+    hint: `แตะเพื่ออนุญาต MIDI${FIREFOX_ADDON}`,
+    support: () =>
+      'requestMIDIAccess' in navigator
+        ? { ok: true }
+        : { ok: false, why: insecure ? HTTPS : 'Web MIDI มีใน Chrome / Edge / Opera / Android และ Firefox 108+ บนคอม (Safari / iOS ไม่มี)' },
     start(u) {
       update = u
       // Already granted earlier → reconnect silently.

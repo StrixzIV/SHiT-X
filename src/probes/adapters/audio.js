@@ -4,6 +4,8 @@
 const WIRED = /usb|type-?c|headset|wired|external|line|jack|earpods|earphone|3\.5|หูฟัง/i
 const USB = /usb|type-?c/i
 
+import { HTTPS, insecure } from '../why.js'
+
 export default function audio() {
   let stream, ctx, timer, update
 
@@ -67,7 +69,7 @@ export default function audio() {
     flavor: 'ขั้วไมค์ 2 ขา จุ่มน้ำได้',
     hint: 'แตะเพื่อเปิดไมค์',
     support: () =>
-      navigator.mediaDevices?.getUserMedia ? { ok: true } : { ok: false, why: 'ต้องเปิดผ่าน HTTPS ถึงจะใช้ไมค์ได้' },
+      navigator.mediaDevices?.getUserMedia ? { ok: true } : { ok: false, why: insecure ? HTTPS : 'เบราว์เซอร์นี้ไม่ให้เว็บใช้ไมค์' },
     start(u) {
       update = u
       const onChange = () => stream && listen().catch(() => {})

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ADAPTER_FACTORIES } from './index.js'
+import { browser } from './why.js'
 
 // Each adapter: { id, name, label, port, mult|xmult, support(), start?(update) → stop,
 //                 arm?(update) (needs a user gesture), tap?(update, state), refresh?(update) }
@@ -52,7 +53,8 @@ export function useProbes() {
         if (a.tap) a.tap(updater(id), state)
         else if (a.arm) await a.arm(updater(id))
       } catch (e) {
-        updater(id)({ detail: e.name === 'NotFoundError' ? 'ไม่ได้เลือกอุปกรณ์' : e.name === 'NotAllowedError' ? 'ไม่ได้รับอนุญาต' : e.message })
+        const denied = browser.inApp ? `แอป ${browser.inApp} ไม่ให้สิทธิ์ — เปิดในเบราว์เซอร์จริง` : 'ไม่ได้รับอนุญาต'
+        updater(id)({ detail: e.name === 'NotFoundError' ? 'ไม่ได้เลือกอุปกรณ์' : e.name === 'NotAllowedError' ? denied : e.message })
       }
     },
     [states, updater],

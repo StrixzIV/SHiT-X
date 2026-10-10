@@ -2,6 +2,8 @@
 const EXTERNAL = /usb|webcam|logi|brio|c9\d\d|elgato|cam link|capture|external|obs|razer|anker|insta360|obsbot/i
 const BUILTIN = /integrated|built-?in|facetime|front|back|rear|ir camera|virtual/i
 
+import { HTTPS, insecure } from '../why.js'
+
 export default function camera() {
   let update, granted = false
 
@@ -24,7 +26,7 @@ export default function camera() {
     mult: 2,
     hint: 'แตะเพื่อเช็กกล้อง (ปิดทันที ไม่บันทึก)',
     support: () =>
-      navigator.mediaDevices?.getUserMedia ? { ok: true } : { ok: false, why: 'ต้องเปิดผ่าน https ถึงจะเช็กกล้องได้' },
+      navigator.mediaDevices?.getUserMedia ? { ok: true } : { ok: false, why: insecure ? HTTPS : 'เบราว์เซอร์นี้ไม่ให้เว็บใช้กล้อง' },
     start(u) {
       update = u
       const onChange = () => granted && refresh().catch(() => {})

@@ -7,11 +7,11 @@ import { detectBrowser } from '../../appraisal/devices.js'
 
 function unsupportedWhy() {
   const b = detectBrowser()
-  if (b.ios) return 'iPhone/iPad ไม่บอกสถานะชาร์จให้เว็บ (ทุกเบราว์เซอร์บน iOS ใช้ WebKit เหมือน Safari)'
-  if (!window.isSecureContext) return 'ต้องเปิดผ่าน https หรือ localhost ถึงจะอ่านแบตได้'
-  if (b.inApp) return `แอป ${b.inApp} ไม่ให้เว็บอ่านแบต — เปิดในเบราว์เซอร์จริง`
-  if (b.engine === 'Gecko') return 'Firefox ถอด Battery API ออกไปแล้ว'
-  return `${b.name} ไม่บอกสถานะชาร์จให้เว็บ`
+  if (b.ios) return 'iPhone/iPad ไม่ให้เว็บอ่านสถานะชาร์จเลย ทุกเบราว์เซอร์ (ในไทยทุกตัวใช้ WebKit เหมือน Safari)'
+  if (b.engine === 'Gecko') return 'Firefox ถอด Battery API ออกตั้งแต่เวอร์ชัน 52'
+  if (b.name === 'Safari') return 'Safari ไม่เคยมี Battery API'
+  if (!window.isSecureContext) return 'Chrome อ่านแบตได้เฉพาะหน้า https หรือ localhost (ตั้งแต่ Chrome 103)'
+  return `${b.name} ไม่ให้เว็บอ่านสถานะชาร์จ`
 }
 
 export default function battery() {
@@ -60,7 +60,7 @@ export default function battery() {
     flavor: 'ชาร์จเข้า = น้ำมีไฟ',
     support: () =>
       navigator.brave
-        ? { ok: false, why: 'Brave ปลอมค่าแบตเพื่อความเป็นส่วนตัว — ติ๊กยืนยันเอง' }
+        ? { ok: false, why: 'Brave ส่งค่าแบตปลอม (ค่าคงที่) เพื่อความเป็นส่วนตัว' }
         : 'getBattery' in navigator
           ? { ok: true }
           : { ok: false, why: unsupportedWhy() },

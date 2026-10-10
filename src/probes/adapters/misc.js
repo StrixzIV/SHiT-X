@@ -1,4 +1,5 @@
 // Passive signals that need no permission: each one is a cable being plugged in.
+import { browser } from '../why.js'
 
 // USB-C → Ethernet dongle (Chrome on Android/ChromeOS reports connection.type).
 export function ethernet() {
@@ -6,7 +7,11 @@ export function ethernet() {
   return {
     id: 'ethernet', name: 'สายแลน', label: 'ต่อผ่านอะแดปเตอร์ USB-C → LAN', port: 'Ethernet', mult: 3,
     flavor: 'Cat6 นำไฟดีกว่า Cat5',
-    support: () => (c && 'type' in c ? { ok: true } : { ok: false, why: 'เบราว์เซอร์ไม่บอกชนิดเครือข่าย' }),
+    // `type` only exists on Chrome Android / Samsung / WebView / ChromeOS; Brave disables the whole API.
+    support: () =>
+      typeof c?.type === 'string'
+        ? { ok: true }
+        : { ok: false, why: browser.brave ? 'Brave ปิด Network Information API' : 'ชนิดเครือข่ายบอกได้เฉพาะ Chrome บน Android / ChromeOS' },
     start(update) {
       const on = () => update({ live: c.type === 'ethernet', reading: c.type === 'ethernet' ? 125 : 0, detail: `เครือข่าย: ${c.type}` })
       on()
@@ -21,7 +26,7 @@ export function display() {
   return {
     id: 'display', name: 'จอนอก', label: 'ต่อจอผ่าน HDMI หรือ USB-C', port: 'USB-C', mult: 2,
     flavor: 'จอเพิ่ม = ไฟเพิ่ม',
-    support: () => ('isExtended' in screen ? { ok: true } : { ok: false, why: 'เบราว์เซอร์ไม่รู้จักจอนอก' }),
+    support: () => ('isExtended' in screen ? { ok: true } : { ok: false, why: 'ตรวจจอนอกได้เฉพาะ Chrome / Edge / Opera' }),
     start(update) {
       const on = () => update({ live: screen.isExtended, reading: screen.isExtended ? 144 : 0, detail: screen.isExtended ? 'พบจอนอก!' : 'จอเดียว' })
       on()

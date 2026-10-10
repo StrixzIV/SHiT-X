@@ -10,7 +10,7 @@ Thailand is flooding again, and nobody knows whether the water around them is li
 - Before anything else you must read every fact (each one has a countdown) and sign the agreement. Every single time.
 - The app judges your device first: it reads the specs, guesses the wattage of your power brick, and gives you a tier from F through S (280 W) all the way up to GW, Kardashev II and Ω. The tier becomes mult₁.
 - Each peripheral you plug in raises mult₂. Hold to dip, and it scores like a Balatro hand: chips, +Mult, ×Mult, each with its own sound.
-- Nothing powered: you get a calm, safe result. The more power, the more absurd it gets: flames, lightning, glitches, emoji rain, a blue screen of death, a nuke, and finally a black hole that restarts the universe.
+- The result cuts to a scene picked by how much power you have: from an 8-bit underwater stage (nothing powered, safe), through an XP blue screen, heaven, a thunderstorm, an electrocuted skeleton (FAHHH), a GBA-style battle, and a ภัยพิบัติระดับหมอลำ military alert, up to a ray-traced Gargantua black hole.
 - Our own wired probe board, which reports over USB serial and also as an audio tone, so it works on iPhone too.
 - A briefing page to read before you dip, a certificate that voids your warranty, and an emergency button that plays a funeral chant.
 
@@ -26,7 +26,7 @@ pnpm dev          # http://localhost:5173
 pnpm dev --host   # phones: mic/serial need HTTPS outside localhost
 ```
 
-Open `/?dev` to skip the ceremony and test every tier and FX level from a panel. To add a port, write one file in `src/probes/adapters/` and add it to `src/probes/index.js`.
+Tick **DEV** (top right) for the dev panel: skip the agreement and other screens, set any wattage or tier, fire any FX level, and run stress tests. To add a port, write one file in `src/probes/adapters/` and add it to `src/probes/index.js`.
 
 ## 🕹️ Demo & Screenshots
 

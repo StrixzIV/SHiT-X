@@ -1,37 +1,125 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import PortalHeader from './components/PortalHeader.jsx'
 import AgreementGate from './components/AgreementGate.jsx'
 import BrowserNotice from './components/BrowserNotice.jsx'
 import IosBlock from './components/IosBlock.jsx'
+import DevPanel from './components/DevPanel.jsx'
+import FpsMeter from './components/FpsMeter.jsx'
 import { detectBrowser } from './appraisal/devices.js'
 import MainPage from './pages/MainPage.jsx'
 import { useProbes } from './probes/useProbes.js'
 import { setSound } from './fx/sfx.js'
+import { consumeBatteryReload, devFromUrl, setDevInUrl } from './session.js'
+import { DEFAULT_KNOBS, DEFAULT_SKIPS } from './devDefaults.js'
 
-// ?dev skips the agreement and the appraisal ceremony and shows the dev panel.
-const DEV = new URLSearchParams(location.search).has('dev')
-// iOS can't report anything we need, so it gets a joke screen instead (?dev still bypasses it).
-const IOS_BLOCKED = detectBrowser().ios && !DEV
+const IOS = detectBrowser().ios
+// Read once per page load (not in a state initializer: StrictMode would run it twice).
+const START_DEV = devFromUrl()
+const SKIP_GATE_ONCE = consumeBatteryReload()
 
 export default function App() {
-  const [agreed, setAgreed] = useState(DEV) // never persisted: read it every time
+  // Dev mode: the DEV tickbox (top right) or ?dev. Its panel holds the skips,
+  // the knobs and the stress tests; everything dev-only is ignored when it's off.
+  const [dev, setDev] = useState(START_DEV)
+  const [panel, setPanel] = useState(START_DEV)
+  const [skips, setSkips] = useState(DEFAULT_SKIPS)
+  const [knobs, setKnobs] = useState(DEFAULT_KNOBS)
+  const [info, setInfo] = useState(null) // live numbers reported by the main page
+  const main = useRef(null) // { fire, sequence, stop, replay } from the main page
+  const randomTimer = useRef(null)
+
+  // The agreement is never persisted: it shows on every load (except right after
+  // a battery re-check reload, which the user triggered after agreeing).
+  const [agreed, setAgreed] = useState(SKIP_GATE_ONCE)
   const [sound, setSoundState] = useState(true)
   // Probes live at the app root so open ports/streams survive overlays.
   const { cards, tap, refresh } = useProbes()
 
   useEffect(() => setSound(sound), [sound])
+  useEffect(() => () => clearInterval(randomTimer.current), [])
+
+  const toggleDev = (on) => {
+    setDev(on)
+    setPanel(on)
+    setDevInUrl(on)
+  }
+
+  const stopRandom = () => {
+    clearInterval(randomTimer.current)
+    randomTimer.current = null
+  }
+  // Stress: a new random wattage (5 W … 1e42 W, log-uniform) every 0.35 s for 10 s.
+  const randomWatts = () => {
+    stopRandom()
+    const end = Date.now() + 10000
+    randomTimer.current = setInterval(() => {
+      if (Date.now() > end) return stopRandom()
+      setKnobs((k) => ({ ...k, watts: Math.round(5 * 10 ** (Math.random() * 41.3)) }))
+    }, 350)
+  }
+  const maxChaos = () => {
+    stopRandom()
+    setKnobs((k) => ({ ...k, watts: 1e42, fake: 30, power: 'on' }))
+    setTimeout(() => main.current?.fire(null), 150) // let the new knobs render first
+  }
+  const stopAll = () => {
+    stopRandom()
+    main.current?.stop()
+  }
+
+  // iOS can't report charging (or anything else we need): joke screen, no way through
+  // except the dev skip.
+  const iosBlocked = IOS && !(dev && skips.ios)
+  const showGate = !iosBlocked && !agreed && !(dev && skips.gate)
 
   return (
     <div className="app">
-      <PortalHeader sound={sound} onSound={() => setSoundState(!sound)} />
-      {IOS_BLOCKED ? (
+      <PortalHeader
+        sound={sound}
+        onSound={() => setSoundState(!sound)}
+        dev={dev}
+        onDev={toggleDev}
+        panel={panel}
+        onPanel={() => setPanel(!panel)}
+      >
+        {dev && panel && (
+          <DevPanel
+            skips={skips}
+            setSkips={setSkips}
+            knobs={knobs}
+            setKnobs={setKnobs}
+            info={info}
+            main={main}
+            onRandomWatts={randomWatts}
+            onMaxChaos={maxChaos}
+            onStop={stopAll}
+            onShowGate={() => {
+              setSkips((s) => ({ ...s, gate: false }))
+              setAgreed(false)
+            }}
+            onClose={() => setPanel(false)}
+          />
+        )}
+      </PortalHeader>
+
+      {iosBlocked ? (
         <IosBlock />
-      ) : agreed ? (
-        <MainPage cards={cards} tap={tap} refresh={refresh} dev={DEV} onShowGate={() => setAgreed(false)} />
+      ) : showGate ? (
+        <AgreementGate onAccept={() => setAgreed(true)} dev={dev} />
       ) : (
-        <AgreementGate onAccept={() => setAgreed(true)} dev={DEV} />
+        <MainPage
+          cards={cards}
+          tap={tap}
+          refresh={refresh}
+          dev={dev}
+          skips={skips}
+          knobs={knobs}
+          apiRef={main}
+          onInfo={setInfo}
+        />
       )}
-      {!IOS_BLOCKED && <BrowserNotice />}
+      {!iosBlocked && <BrowserNotice />}
+      {dev && knobs.fps && <FpsMeter />}
     </div>
   )
 }

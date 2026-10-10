@@ -11,8 +11,8 @@ The first version (agy/Gemini) did all detection through one browser API, `navig
 │  AgreementGate (every load) → MainPage                             │
 │   1 Appraisal: spec readout → wattage dial → tier stamp (mult₁)    │
 │   2 Peripherals: tap to connect, each live one raises mult₂        │
-│   3 HoldButton → CalcOverlay: fake compute → tally → level FX      │
-│  fx/: SwirlBackground (WebGL) · Chaos · sfx (WebAudio) · juice     │
+│   3 HoldButton → CalcOverlay: tally on black → scene L0–L7 → sheet │
+│  fx/: Particles · scenes/L0–L7 · audio + sfx (WebAudio) · juice   │
 ├────────────────────────────────────────────────────────────────────┤
 │  appraisal/specs.js — read specs, estimate brick watts, tiers      │
 │  game/score.js      — pure: chips × mult₁ × mult₂ → total, level   │
@@ -88,51 +88,68 @@ The result is a Balatro hand, and `computeScore` returns the `steps` the calcula
 3. **×Mult**: the tier multiplier
 4. **×0**: if nothing is powered (not charging and no live peripheral) → total 0 → safe
 
-total = chips × mult. The FX level comes from the total:
+total = chips × mult. The level (0–7) picks the result scene: thresholds 0, > 0, 2,000, 8,000, 30,000, 100,000, 1e8, 1e15. See "Result scenes".
 
-| Level | Total | Effects |
-|---|---|---|
-| 0 | 0 | calm water, bubbles, soft chime |
-| 1 | > 0 | shake, sparks |
-| 2 | ≥ 2,000 | red swirl, flames, boom |
-| 3 | ≥ 8,000 | lightning, white flashes, RGB glitch, hue cycling |
-| 4 | ≥ 30,000 | emoji rain, wobble |
-| 5 | ≥ 100,000 | fake BSOD + siren, spin |
-| 6 | ≥ 1e8 | nuke flash, strobing invert, emergency news ticker |
-| 7 | ≥ 1e15 | the universe gets sucked into a black hole, then a big bang |
+## Result scenes (`fx/CalcOverlay.jsx`, `fx/scenes/`)
+
+1. **Loading:** a black page with white motes drifting slowly around the centre (`fx/Particles.jsx`). On top, the Balatro-style tally plays (chips / +Mult / ×Mult / ×0, with sounds), then the total ticks up.
+2. **Hard cut** to the level's scene. Each scene opens its own sound session (`fx/audio.js`), which stops with the scene.
+3. **Result sheet** slides up over the still-running scene after `SCENE_MS[level]`.
+
+| Lvl | Scene | Sound (synthesized, original) | Drop-in files (`public/fx/`) |
+|---|---|---|---|
+| 0 | Famicom-style underwater stage, 240 px tall and as wide as the screen (portrait phones get a taller water column): phone diver trailing its cable, fish, jellyfish, coral, HUD, and Claude Code's mascot (block-for-block from its welcome banner) in a hard hat, paddling across and saying "BUILDING iLEAK..." | 3/4 chiptune waltz, bubble blips, a bloop when Claude speaks | `l0-underwater.mp3` |
+| 1 | XP-style blue screen (own wording) with sparks and a little smoke | 8-bit crackle + mains hum | — |
+| 2 | Hard cut to the heaven stairway photo, slow zoom, god-rays, sparkles | angel choir "ahh" chords + harp glissando, generated reverb | `l2-heaven.mp3` (photo: `heaven.jpg`) |
+| 3 | Storm and rain; the background figure only shows when lightning strikes | crack + rumble per strike, rain bed | `lowtiergod.png` / `.jpg` / `.webp`: a transparent cut-out stands full-height on the ground, a plain photo fills the screen (else a silhouette) |
+| 4 | The purple electrocuted skeleton photo, shaking, X-ray flicker, purple arcs | electric buzz + synthesized "FAHHH" | `l4-fahh.mp3`, `fahh.mp3` or `fahhhhhhhhhhhhhh.mp3`, played at the cut and ~2.6 s later (photo: `skeleton.png`) |
+| 5 | GBA-style wild battle: flash + stripe wipe, then PLUGCHU (original electric plug creature). You use THUNDER, it's not very effective, it absorbs 220 V, it uses THUNDER, you faint | encounter jingle, battle loop with drums, attack / HP-drain / faint effects, text blips | `l5-battle.mp3`, `l5-opponent.png` / `.jpg` / `.webp` (rename via `OPPONENT` in `L5Battle.jsx`) |
+| 6 | "ภัยพิบัติระดับหมอลำ": military command display: radar sweep, alarm title, warning stripes, radio log with the live voltage | radio static, squelch, roger beeps, Morse, distant siren; a Thai voice reads the log if the device has one | `l6-radio.mp3` |
+| 7 | Gargantua: WebGL ray-marched black hole, rays bent by the Schwarzschild photon equation (lensed disk, photon ring, Doppler-bright side), orbiting camera | heavy distorted drone: detuned saws through a resonant swept filter and overdrive, sub, whooshes, slow downward pitch bend | `l7-space.mp3` |
+
+**Drop-in files** are optional. Each scene tries its file first and falls back to its own synthesized sound or art when the file is missing. On Firebase a missing path returns `index.html`, which just fails to load. The app ships original art and music only. Nintendo / Pokémon assets, a real person's photo, or a meme clip are the team's own files to add.
+
+Mute (the header speaker) silences everything, including scenes already playing, through one master gain (`fx/sfx.js`).
 
 ## Dev mode
 
-Open with **`?dev`** (e.g. `http://localhost:5173/?dev`). It skips the agreement and the appraisal animation, makes the hold button 0.3 s, and shows a panel (bottom-left, collapsible) where you can:
+The **DEV tickbox** sits in the top-right of the header and is always visible. `?dev` in the URL does the same, and ticking the box writes `?dev=1` so it survives reloads. Ticking it opens a panel under the box (▾ / ▴ folds it). The whole header sits above every overlay (agreement, calculation, blue screen, black hole), so the tickbox and panel are reachable everywhere. Overlays read the header's measured height from `--header-h` and start below it. Nothing dev-related applies while the box is unticked.
 
-- set any wattage (`280`, `1.21e9`, `1e42`) or jump to any tier
-- force power on / off / auto
-- add fake USB-C peripherals (+2 mult each)
-- set animation speed to 1× / 3× / 10×
-- fire the real score, or fire any FX level L0–L7 directly
-- replay the appraisal animation, or reopen the agreement
+- **ข้าม (skips, each toggleable live):** agreement page · iOS block · appraisal animation · forced manual charge · calculation (straight to the result with its effects) · 0.3 s hold
+- **ค่า (knobs):** any wattage (`280`, `1.21e9`, `1e42`) or a tier button · power auto / on / off · fake USB-C devices · speed 1× / 3× / 10×
+- **ยิง FX:** the real score, or any level L0–L7
+- **Stress test:** all levels L0→L7 back-to-back (each result closes itself, the last stays) · real score ×5 · a random wattage every 0.35 s for 10 s · 50 fake USB-C · max chaos (Ω + 30 fake devices + powered) · stop · FPS meter
+- **Tools:** replay the appraisal · reopen the agreement · reset · raw spec dump (exactly what the browser reported)
 
-## Device support matrix
+## Charging: read it, or make the user charge by hand
 
-Cards sit in hand order. USB-C cards come first and carry the biggest multipliers, because USB-C is the main supported port. **iOS / iPadOS is blocked on purpose** (see below).
+| Situation | What the app does |
+|---|---|
+| Battery API works | Live status, polled 4×/s and re-acquired every 1.5 s. "ตรวจซ้ำ" re-reads it. If that doesn't change anything, "โหลดหน้าใหม่" appears (see below). The "ยืนยันเอง" tick stays optional. |
+| Battery API missing or fake (Safari, Firefox, Brave, plain http; iOS only gets here through the DEV skip) | Forced manual mode. The dip button is replaced by "ไปชาร์จด้วยมือก่อน" until the user presses **⚡ ชาร์จด้วยมือ**, which cranks a battery from 0 to 100%, or **ไม่ได้เสียบสาย**. |
 
-| Card | Port | API | Chrome / Edge / Opera / Samsung (desktop) | Android Chrome / Samsung Internet | Firefox | Safari (macOS) |
-|---|---|---|---|---|---|---|
-| โพรบ iLeak | USB-C | Web Serial | ✅ | ⚠️ recent Chrome only | ❌ | ❌ |
-| สายชาร์จ | USB-C | Battery Status (polled 4×/s) | ✅ (Brave fakes it → manual tick) | ✅ | ❌ removed | ❌ |
-| อุปกรณ์ USB | USB-C | WebUSB | ✅ | ✅ | ❌ | ❌ |
-| แจ็คหูฟัง / ไมค์ | 3.5mm / USB-C audio | getUserMedia + analyser | ✅ | ✅ | ✅ | ✅ |
-| จอนอก | USB-C (DP/HDMI) | `screen.isExtended` | ✅ | ❌ | ❌ | ❌ |
-| คีย์บอร์ด / เมาส์ USB | USB-C | WebHID | ✅ | ❌ | ❌ | ❌ |
-| เครื่องดนตรี MIDI | USB-C | Web MIDI | ✅ | ✅ | ✅ | ❌ |
-| กล้อง USB | USB-C | getUserMedia labels | ✅ | ✅ | ✅ | ✅ |
-| จอยเกม | USB-C | Gamepad | ✅ | ✅ | ✅ | ✅ |
-| เมาส์บนมือถือ | USB-C | `any-pointer: fine` | n/a | ✅ | ✅ | n/a |
-| สายแลน | Ethernet | `navigator.connection.type` | ❌ | ✅ | ❌ | ❌ |
-| แอปติดตั้ง | any | native bridge | via Tauri | via Capacitor | — | — |
-| ปุ่มจำลอง | ใจ | none | ✅ | ✅ | ✅ | ✅ |
+**Why reload is the real re-check (Chromium).** `BatteryStatusService` starts the OS listener (UPower over D-Bus on Linux) when the first page subscribes. It stops and forgets the state when the last subscriber leaves (`battery_status_service.cc`). If a UPower signal is missed, polling `battery.charging` in the page can't recover, because the renderer only gets pushed updates. A reload with no other tab using the battery restarts the listener and reads fresh values. "โหลดหน้าใหม่" sets a one-shot `sessionStorage` flag, so that one reload skips the agreement the user already accepted. A normal reload still shows it.
 
-All sensors need a secure context (https or localhost). In-app browsers (LINE, Facebook, Messenger, Instagram, TikTok, WeChat, X) usually block them too. A banner offers a way out: LINE gets `?openExternalBrowser=1`, Android gets a Chrome `intent://` link, and iOS gets instructions.
+## Device support matrix (verified, see "Fact check")
+
+Version numbers are from MDN browser-compat-data 8.1.5. "WebView" means Android System WebView, which is what LINE, Facebook, Messenger, Instagram and TikTok use on Android. iOS covers every iOS browser (all WebKit in Thailand) and iOS in-app browsers.
+
+| Card | API | Chrome / Edge / Opera (desktop) | Chrome Android / Samsung Internet | Android WebView (in-app) | Firefox (desktop) | Firefox Android | Safari (macOS) | iOS |
+|---|---|---|---|---|---|---|---|---|
+| สายชาร์จ (decides "powered") | Battery Status | ✅ 38+, https only since 103. Brave returns a fixed fake value | ✅ | ✅ | ❌ removed in 52 | ❌ | ❌ | ❌ |
+| โพรบ iLeak | Web Serial | ✅ 89+ (Brave: off by default) | ✅ Chrome 148+ (138–147: Bluetooth ports only) | ❌ | ✅ 151+, after a site-permission add-on prompt | ❌ | ❌ | ❌ |
+| อุปกรณ์ USB | WebUSB | ✅ 61+ | ✅ | ❌ `navigator.usb` exists but does nothing (crbug 41441927) | ❌ | ❌ | ❌ | ❌ |
+| แจ็คหูฟัง / ไมค์ | getUserMedia | ✅ | ✅ | ⚠️ the host app decides | ✅ | ✅ | ✅ 11+ | ✅ (in-app: the host app decides) |
+| จอนอก | `screen.isExtended` | ✅ 100+ | exposed, always false | — | ❌ | ❌ | ❌ | ❌ |
+| คีย์บอร์ด / เมาส์ USB | WebHID | ✅ 89+ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| เครื่องดนตรี MIDI | Web MIDI | ✅ 43+ | ✅ | ✅ | ✅ 108+, after a site-permission add-on prompt | ❌ | ❌ | ❌ |
+| กล้อง USB | getUserMedia + labels | ✅ | ✅ | ⚠️ the host app decides | ✅ | ✅ | ✅ | ✅ iPad external cameras |
+| จอยเกม | Gamepad (https only: Chrome 86+, Firefox 81+) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ 10.1+ | ✅ |
+| เมาส์บนมือถือ | `any-pointer: fine` | n/a | ✅ | ✅ | n/a | ✅ | n/a | ✅ iPad |
+| สายแลน | `navigator.connection.type` | ChromeOS only | ✅ (Brave disables it) | ✅ 50+ | ❌ | ❌ | ❌ | ❌ |
+| ปุ่มจำลอง | none | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+Every sensor needs a secure context (https or localhost). On a plain-http LAN address the battery, USB, Serial, MIDI, mic, camera and gamepads are all switched off, so phone testing must go through Firebase (https).
 
 ### Devices the appraisal recognizes (`appraisal/devices.js`)
 
@@ -143,7 +160,7 @@ All sensors need a secure context (https or localhost). In-app browsers (LINE, F
 
 ### iOS is blocked
 
-Every iOS browser is WebKit, and WebKit gives pages no charging state, USB, Serial, HID or MIDI. iPhones and iPads therefore get a joke screen (`components/IosBlock.jsx`): "เสียใจด้วยนะ ชาว iOS", a random excuse, an appeal button that always gets rejected, and a share button to open the link on a computer or Android. `?dev` bypasses it.
+Every iOS browser is WebKit in Thailand (the EU-only alternative-engine rules don't apply). WebKit gives pages no charging state, USB, Serial, HID or MIDI. iPhones and iPads get a joke screen with no way through (`components/IosBlock.jsx`). It shows "เสียใจด้วยนะ ชาว iOS", a random excuse, an appeal button that always gets rejected, and a share button to open the link on a computer or Android. Only the DEV skip "ข้ามหน้าบล็อก iOS" gets past it, for testing.
 
 ### Browser compatibility
 
@@ -154,6 +171,28 @@ The build targets `es2019 / chrome79 / edge79 / firefox78 / safari13`. Tailwind 
 - detects a tone from the iLeak Probe (frequency ∝ mV). This makes it a one-way wired modem for browsers without Web Serial or WebUSB, such as Firefox and Safari on macOS.
 
 Mic access requires HTTPS, so for phone demos use `vite --host` behind HTTPS or deploy the app.
+
+## Fact check (October 2026)
+
+| Claim in the app | Verdict | Source |
+|---|---|---|
+| Battery API: Chrome / Edge / Opera / Samsung / Android WebView yes; Firefox removed it in 52; Safari and iOS never had it; https-only since Chrome 103 | ✅ | MDN BCD `api.Navigator.getBattery` |
+| Brave fakes the battery | ✅ fixed value | Brave wiki "Deviations from Chromium" |
+| Android in-app browsers block the battery | ❌ **was wrong.** WebView supports it; only USB / Serial / HID are missing, and the mic and camera depend on the app. Banner fixed. | BCD `webview_android` |
+| WebUSB works wherever `navigator.usb` exists | ❌ **was wrong** for WebView (exposed but broken). The card is now marked unusable there. | BCD note, crbug 41441927 |
+| Web Serial: desktop Chromium only | ⚠️ **outdated.** Also Chrome Android 148+ and Firefox 151+ (desktop, add-on prompt). Messages and matrix updated. | BCD, Firefox 151 release notes |
+| `getHighEntropyValues()` exists wherever `userAgentData` does | ❌ **was wrong.** Android WebView lacks it; the unguarded call would have hung the appraisal in every Android in-app browser. Guarded now. | BCD `api.NavigatorUAData.getHighEntropyValues` |
+| RAM "browser won't report more than this" | ⚠️ Chrome 147+ caps at 32 GB on desktop and 8 GB on Android, rounding down. Wording fixed. | BCD `api.Navigator.deviceMemory` |
+| CPU threads are real | ⚠️ Safari clamps to 4 or 8. Now labelled. | BCD note (WebKit bug 233381) |
+| GPU name is real | ⚠️ Firefox maps every GPU to a generic bucket (any RTX / GTX → "GeForce GTX 980, or similar"), and Safari always says "Apple GPU". Masked names are labelled and don't drive dGPU guesses. | Firefox `SanitizeRenderer.cpp` |
+| Gamepads work on http | ❌ Chrome 86+ and Firefox 81+ return none on insecure origins. The card says so. | Mozilla Hacks "Securing Gamepad API", MDN |
+| `Intl.Segmenter` fallback needed below Firefox 125 / Safari 14.1 / Chrome 87 | ✅ | BCD |
+| Tailwind v4 needs Chrome 111 / Safari 16.4 / Firefox 128 | ✅ (reason it was removed) | tailwindcss.com/docs/compatibility |
+| LINE `?openExternalBrowser=1` opens the real browser | ✅ iOS and Android (a user setting can override it) | Classmethod test write-up |
+| Charging can be detected on iOS / Safari some other way | ❌ No web API or reliable trick exists. Hence manual charge. | — |
+| Reload re-reads a stale Linux battery | ✅ per Chromium's service lifecycle | Chromium `battery_status_service.cc` |
+
+Sources: [MDN browser-compat-data](https://github.com/mdn/browser-compat-data) · [Firefox 151 for developers](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/151) · [Brave: Deviations from Chromium](https://github.com/brave/brave-browser/wiki/Deviations-from-Chromium-(features-we-disable-or-remove)) · [Firefox SanitizeRenderer.cpp](https://searchfox.org/mozilla-central/source/dom/canvas/SanitizeRenderer.cpp) · [Chromium battery_status_service.cc](https://github.com/chromium/chromium/blob/main/services/device/battery/battery_status_service.cc) · [Securing Gamepad API](https://hacks.mozilla.org/2020/07/securing-gamepad-api/) · [Tailwind compatibility](https://tailwindcss.com/docs/compatibility) · [LINE openExternalBrowser (Classmethod)](https://dev.classmethod.jp/articles/line-open-uri-in-external-browser/)
 
 ## The wired probe (our own device)
 
@@ -190,4 +229,4 @@ The web app needs no changes for this. The bridge is only another adapter.
 
 - **Agreement gate**: shown on every load, never remembered. Facts unlock one at a time, and each "read" button counts down by text length. After that, every safety box and the consent must be ticked. The main page is not rendered until then.
 - **Main page**: an elitist, staged reveal. The spec lines type out, the dial needle swings to the brick wattage, and the tier stamp slams down. Peripherals unlock after the stamp. The final number is shown only as `???` until the user holds the button.
-- **Calculation overlay**: the scoring cards trigger one by one (chips / +Mult / ×Mult / ×0, with pop-ups and sounds whose pitch climbs) → the total ticks up → level FX → result sheet. Who takes the case climbs with the level (`game/responders.js`): แม่ → ช่างไฟปากซอย → การไฟฟ้า → ปภ. → ทหารช่าง → UN → NASA + IAEA → เบื้องบน. Lower ones show as "เกินอำนาจ ส่งเรื่องต่อ". Links go to websites only, never real hotlines.
+- **Calculation overlay**: black loading screen with floating motes and the Balatro-style tally → hard cut to the level's scene (see "Result scenes") → result sheet. Who takes the case climbs with the level (`game/responders.js`): แม่ → ช่างไฟปากซอย → การไฟฟ้า → ปภ. → ทหารช่าง → UN → NASA + IAEA → เบื้องบน. Lower ones show as "เกินอำนาจ ส่งเรื่องต่อ". Links go to websites only, never real hotlines.
