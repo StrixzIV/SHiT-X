@@ -4,7 +4,7 @@ import { Award, PhoneCall, Printer, RotateCcw } from 'lucide-react'
 import SwirlBackground from './SwirlBackground.jsx'
 import Chaos from './Chaos.jsx'
 import { CountUp, WavyText } from './juice.jsx'
-import { RESPONDERS } from '../game/responders.js'
+import { RESPONDERS } from '../../../game/responders.js'
 import { beep, boom, chipSound, multSound, safe, shock, siren, tick, xmultSound, zeroSound } from './sfx.js'
 
 const VERDICT = [

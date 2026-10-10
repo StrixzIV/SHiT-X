@@ -1,5 +1,5 @@
 import { BatteryCharging, Cable, Camera, Cpu, EthernetPort, Gamepad2, Headphones, Keyboard, Monitor, Mouse, Music, Pill, Smartphone, Usb } from 'lucide-react'
-import { peripheralWeight } from '../game/score.js'
+import { peripheralWeight } from '../../../game/score.js'
 import { CountUp } from '../fx/juice.jsx'
 
 const ICONS = {
