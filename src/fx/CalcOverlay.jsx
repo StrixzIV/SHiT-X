@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import confetti from 'canvas-confetti'
-import { Award, PhoneCall, Printer, RotateCcw, Wrench } from 'lucide-react'
+import { Award, PhoneCall, Printer, RotateCcw } from 'lucide-react'
 import SwirlBackground from './SwirlBackground.jsx'
 import Chaos from './Chaos.jsx'
 import { CountUp, WavyText } from './juice.jsx'
+import { RESPONDERS } from '../game/responders.js'
 import { beep, boom, chipSound, multSound, safe, shock, siren, tick, xmultSound, zeroSound } from './sfx.js'
 
 const VERDICT = [
@@ -172,13 +173,24 @@ export default function CalcOverlay({ score, tier, speed = 1, onClose }) {
       {phase === 'result' && (
         <div className="result">
           <p className="result-sub">{sub}</p>
-          <div className="result-actions">
-            <a className="act" href="https://shopee.co.th/search?keyword=เทปพันสายไฟ" target="_blank" rel="noopener noreferrer">
-              <Wrench /> <span><b>เรียกช่างซ่อมด่วน</b><small>เทปพันสายไฟสีดำ ฿15</small></span>
-            </a>
-            <a className="act red" href="https://www.youtube.com/results?search_query=สวดพระอภิธรรม+7+คัมภีร์" target="_blank" rel="noopener noreferrer">
-              <PhoneCall /> <span><b>แจ้งเหตุกู้ภัยฉุกเฉิน</b><small>บทสวดพระอภิธรรม 7 คัมภีร์</small></span>
-            </a>
+          <ol className="chain">
+            {RESPONDERS.slice(0, level).map((r) => (
+              <li key={r.org} className="passed"><s>{r.org}</s> <span>เกินอำนาจ ส่งเรื่องต่อ</span></li>
+            ))}
+          </ol>
+          <div className={`responder r${level}`}>
+            <span className="eyebrow">ผู้รับเรื่อง · ระดับ {level}/7</span>
+            <h3>{RESPONDERS[level].org}</h3>
+            <small className="who">{RESPONDERS[level].who}</small>
+            <p className="reply">“{RESPONDERS[level].reply}”</p>
+            <div className="responder-foot">
+              <span>จะติดต่อกลับ: <b>{RESPONDERS[level].eta}</b></span>
+              {RESPONDERS[level].action && (
+                <a className="act" href={RESPONDERS[level].action[1]} target="_blank" rel="noopener noreferrer">
+                  <PhoneCall size={18} /> {RESPONDERS[level].action[0]}
+                </a>
+              )}
+            </div>
           </div>
           {cert && (
             <div className="cert">

@@ -49,10 +49,14 @@ Adapters never import React. To add a port, write one file and add it to `probes
 
 Browsers never expose charger wattage, so `estimateWatts` infers the brick from hardware class and takes the highest match:
 
-- GPU name from `WEBGL_debug_renderer_info` (RTX xx80/90 Laptop → 280 W, desktop RTX → PSU 650–1000 W, Apple M Max → 140 W, iGPU → 65 W, flagship Adreno → 45 W, …)
+- GPU name from `WEBGL_debug_renderer_info` on a `high-performance` context (so hybrid laptops report the dGPU), with a paren-aware ANGLE parser. WebGPU adapter info (vendor / architecture) is a second source and catches an NVIDIA dGPU hiding behind the iGPU (RTX xx80/90 Laptop → 280 W, desktop RTX → PSU 650–1000 W, Apple M Max → 140 W, iGPU → 65 W, flagship Adreno → 45 W, …)
 - CPU threads (≥ 24 → 280 W "HX class", ≥ 16 → 140 W). Hybrid-graphics laptops often show the iGPU to the browser, so this catches them.
 - a live reading from `battery.chargingTime` when charging (assumed 80 Wh laptop / 17 Wh phone)
 - the user can override the wattage; it is labelled "self-declared"
+- other rows: physical screen resolution + measured refresh rate, Windows 10/11 from UA-CH `platformVersion`, laptop vs desktop from the battery state
+- dev mode shows the raw strings the browser returned (`specs.raw`), so a wrong guess can be diagnosed on the actual device
+
+The meter swaps to a bigger instrument for each range, so the needle always stays on the scale: มัลติมิเตอร์ตลาดนัด (5 W–1 kW) → มิเตอร์การไฟฟ้า (–1 MW) → แผงโรงไฟฟ้า (–1 GW) → ฟลักซ์คาพาซิเตอร์ (–1 TW) → หอดูดาวสุริยะ (–1e17 W) → มาตรวัดคาร์ดาเชฟ (–1e27 W) → มาตรวัดพลังพระเจ้า. See `appraisal/meters.js`.
 
 | Tier | Brick | mult₁ | |
 |---|---|---|---|
@@ -167,4 +171,4 @@ The web app needs no changes for this. The bridge is only another adapter.
 
 - **Agreement gate**: shown on every load, never remembered. Facts unlock one at a time, and each "read" button counts down by text length. After that, every safety box and the consent must be ticked. The main page is not rendered until then.
 - **Main page**: an elitist, staged reveal. The spec lines type out, the dial needle swings to the brick wattage, and the tier stamp slams down. Peripherals unlock after the stamp. The final number is shown only as `???` until the user holds the button.
-- **Calculation overlay**: the scoring cards trigger one by one (chips / +Mult / ×Mult / ×0, with pop-ups and sounds whose pitch climbs) → the total ticks up → level FX → result sheet with Shopee tape, funeral chant and certificate.
+- **Calculation overlay**: the scoring cards trigger one by one (chips / +Mult / ×Mult / ×0, with pop-ups and sounds whose pitch climbs) → the total ticks up → level FX → result sheet. Who takes the case climbs with the level (`game/responders.js`): แม่ → ช่างไฟปากซอย → การไฟฟ้า → ปภ. → ทหารช่าง → UN → NASA + IAEA → เบื้องบน. Lower ones show as "เกินอำนาจ ส่งเรื่องต่อ". Links go to websites only, never real hotlines.

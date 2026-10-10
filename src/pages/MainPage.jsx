@@ -98,6 +98,8 @@ export default function MainPage({ cards, tap, dev, onShowGate }) {
 
       {dev && (
         <DevPanel
+          specs={specs}
+          est={est}
           watts={watts}
           setWatts={setDevWatts}
           power={devPower}

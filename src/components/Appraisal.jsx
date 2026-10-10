@@ -3,19 +3,19 @@ import { WATT_CHOICES } from '../appraisal/specs.js'
 import { beep } from '../fx/sfx.js'
 import { big, si } from '../game/format.js'
 
-const LOG_MIN = Math.log(5)
-const LOG_MAX = Math.log(1000)
-const needleAngle = (w) => -90 + 180 * Math.min(1, Math.max(0, (Math.log(Math.max(w, 5)) - LOG_MIN) / (LOG_MAX - LOG_MIN)))
+import { meterAngle, meterFor } from '../appraisal/meters.js'
+
+const short = (w) => si(w).replace(' ', '')
 
 function specLines(s, est, powered, userPlugged) {
   const b = s.battery
   return [
     ['ระบบปฏิบัติการ', [s.platform, s.arch].filter(Boolean).join(' · ')],
-    ['รุ่นเครื่อง', s.model || 'เครื่องไม่ยอมเปิดเผย (น่าสงสัย)'],
+    ['ประเภทเครื่อง', [s.form, s.model].filter(Boolean).join(' · ') || 'เครื่องไม่ยอมเปิดเผย (น่าสงสัย)'],
     ['หน่วยประมวลผล', s.cores ? `${s.cores} เธรด` : 'ไม่เปิดเผย'],
-    ['หน่วยความจำ', s.memory ? `≥ ${s.memory} GB` : 'ไม่เปิดเผย (คนรวยมักเก็บเงียบ)'],
-    ['การ์ดจอ', s.gpu || 'ไม่ทราบ (อาจเป็นมันฝรั่ง)'],
-    ['หน้าจอ', `${s.screen.w}×${s.screen.h} @${s.screen.dpr}x`],
+    ['หน่วยความจำ', s.memory ? (s.memory >= 8 ? `≥ ${s.memory} GB (เบราว์เซอร์ไม่ยอมบอกเกินนี้)` : `~${s.memory} GB`) : 'ไม่เปิดเผย (คนรวยมักเก็บเงียบ)'],
+    ['การ์ดจอ', [s.gpu || 'ไม่ทราบ (อาจเป็นมันฝรั่ง)', s.gpuArch && `สถาปัตย์ ${s.gpuArch}`].filter(Boolean).join(' · ')],
+    ['หน้าจอ', `${s.screen.w}×${s.screen.h}${s.screen.hz ? ` · ${s.screen.hz} Hz` : ''}${s.screen.extended ? ' · มีจอนอก' : ''}`],
     ['แหล่งพลังงาน', b ? `${powered ? 'เสียบปลั๊กอยู่' : 'ใช้แบตเตอรี่ (ไม่มีไฟเข้า)'} · ${Math.round(b.level * 100)}%` : userPlugged ? 'แจ้งว่าเสียบปลั๊ก' : 'ไม่ทราบ'],
     ['อัตราชาร์จที่วัดได้', est.measured ? `~${est.measured} W` : 'วัดไม่ได้'],
   ]
@@ -26,6 +26,7 @@ export default function Appraisal({ specs, est, watts, override, setOverride, ti
   const lines = specs ? specLines(specs, est, powered, userPlugged) : []
   const typing = specs && shown < lines.length
   const dialReady = specs && shown >= lines.length
+  const meter = meterFor(watts)
 
   useEffect(() => {
     if (!specs || instant) return
@@ -67,30 +68,30 @@ export default function Appraisal({ specs, est, watts, override, setOverride, ti
         </dl>
 
         <div className={`dial-wrap ${dialReady ? 'on' : ''}`}>
-          <svg viewBox="0 0 200 120" className="dial" aria-hidden>
-            <defs>
-              <linearGradient id="arc" x1="0" x2="1">
-                <stop offset="0" stopColor="#6b6b6b" />
-                <stop offset=".55" stopColor="#c9a227" />
-                <stop offset="1" stopColor="#ff4d2e" />
-              </linearGradient>
-            </defs>
-            <path d="M20 105 A80 80 0 0 1 180 105" fill="none" stroke="url(#arc)" strokeWidth="12" strokeLinecap="round" />
-            {[5, 20, 65, 280, 1000].map((w) => {
-              const a = (needleAngle(w) - 90) * (Math.PI / 180)
-              return <text key={w} x={100 + 62 * Math.cos(a)} y={108 + 62 * Math.sin(a)} className="dial-tick">{w}</text>
-            })}
-            <g
-              className={`needle ${dialReady && watts > 1000 ? 'overload' : ''}`}
-              style={{ transform: `rotate(${dialReady ? needleAngle(watts) : -90}deg)`, '--spin': `${Math.max(0.06, 0.9 - Math.log10(watts) / 25)}s` }}
-            >
-              <line x1="100" y1="105" x2="100" y2="32" />
-              <circle cx="100" cy="105" r="7" />
-            </g>
-          </svg>
+          <div key={meter.id} className={`meter meter-${meter.id}`}>
+            <div className="meter-name">
+              <b>{meter.name}</b>
+              <small>{meter.note} · {short(meter.min)}–{short(meter.max)}</small>
+            </div>
+            <svg viewBox="0 0 200 120" className="dial" aria-hidden>
+              <defs>
+                <linearGradient id={`arc-${meter.id}`} x1="0" x2="1">
+                  {meter.arc.map((c, i) => <stop key={c} offset={i / (meter.arc.length - 1)} stopColor={c} />)}
+                </linearGradient>
+              </defs>
+              <path d="M20 105 A80 80 0 0 1 180 105" fill="none" stroke={`url(#arc-${meter.id})`} strokeWidth="12" strokeLinecap="round" />
+              {meter.ticks.map((w) => {
+                const a = (meterAngle(w, meter) - 90) * (Math.PI / 180)
+                return <text key={w} x={100 + 62 * Math.cos(a)} y={108 + 62 * Math.sin(a)} className="dial-tick">{short(w)}</text>
+              })}
+              <g className="needle" style={{ transform: `rotate(${dialReady ? meterAngle(watts, meter) : -90}deg)` }}>
+                <line x1="100" y1="105" x2="100" y2="32" />
+                <circle cx="100" cy="105" r="7" />
+              </g>
+            </svg>
+          </div>
           <div className="dial-value">
             {dialReady ? <b>{si(watts)}</b> : '— W'}
-            {dialReady && watts > 1000 && <small className="overload-note">เข็มหลุด! เกินสเกลมาตรวัด</small>}
             <small>{override ? 'แจ้งเอง (ไม่ผ่านการรับรอง)' : est.why}</small>
           </div>
         </div>

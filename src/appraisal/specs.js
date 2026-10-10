@@ -1,61 +1,146 @@
 // Reads whatever the browser admits about the device, then guesses how big
 // its power brick is. Browsers never expose real wattage, so the GPU / CPU
 // class decides it, and a live charge-rate reading can only raise it.
+// `raw` keeps every source string so the dev panel can show what was seen.
 
 export async function readSpecs() {
   const ua = navigator.userAgent
+  const dpr = devicePixelRatio || 1
   const s = {
     cores: navigator.hardwareConcurrency ?? null,
     memory: navigator.deviceMemory ?? null,
-    screen: { w: screen.width, h: screen.height, dpr: devicePixelRatio },
-    gpu: gpuName(),
+    screen: { w: Math.round(screen.width * dpr), h: Math.round(screen.height * dpr), dpr, hz: null, extended: screen.isExtended ?? null },
+    gpu: null,
+    gpuArch: null,
+    gpuVendor: null,
     mobile: /Android|iPhone|iPad|Mobile/i.test(ua),
-    platform: /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'macOS' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Linux/.test(ua) ? 'Linux' : 'ไม่ทราบ',
+    platform: /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'macOS' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /CrOS/.test(ua) ? 'ChromeOS' : /Linux/.test(ua) ? 'Linux' : 'ไม่ทราบ',
     model: null,
     arch: null,
     battery: null,
+    form: null,
+    raw: { ua },
   }
-  try {
-    const hi = await navigator.userAgentData?.getHighEntropyValues(['model', 'platform', 'platformVersion', 'architecture', 'bitness'])
-    if (hi) {
-      s.platform = `${hi.platform} ${hi.platformVersion ?? ''}`.trim()
-      s.model = hi.model || null
-      s.arch = hi.architecture ? `${hi.architecture}${hi.bitness ? `-${hi.bitness}` : ''}` : null
-      s.mobile = hi.mobile ?? s.mobile
-    }
-  } catch { /* not Chromium */ }
-  try {
-    const b = await navigator.getBattery?.()
-    if (b) s.battery = { level: b.level, charging: b.charging, chargingTime: b.chargingTime }
-  } catch { /* blocked */ }
+
+  // WebGL with the high-performance hint so hybrid laptops report the dGPU, not the iGPU
+  const gl = webglRenderer()
+  s.raw.webgl = gl
+  s.gpu = cleanGpu(gl)
+
+  const [hi, gpu, bat, hz] = await Promise.all([
+    navigator.userAgentData?.getHighEntropyValues(['model', 'platform', 'platformVersion', 'architecture', 'bitness', 'formFactors']).catch(() => null),
+    webgpuInfo(),
+    navigator.getBattery?.().catch(() => null),
+    refreshRate(),
+  ])
+
+  if (hi) {
+    s.raw.uach = hi
+    s.platform = osName(hi.platform, hi.platformVersion)
+    s.model = hi.model || null
+    s.arch = hi.architecture ? `${hi.architecture}${hi.bitness ? `-${hi.bitness}` : ''}` : null
+    s.mobile = hi.mobile ?? s.mobile
+  }
+  if (gpu) {
+    s.raw.webgpu = gpu
+    s.gpuVendor = gpu.vendor || null
+    s.gpuArch = gpu.architecture || null
+    if (!s.gpu || /swiftshader|llvmpipe|basic render/i.test(s.gpu)) s.gpu = gpu.description || s.gpu
+  }
+  if (bat) s.battery = { level: bat.level, charging: bat.charging, chargingTime: bat.chargingTime, dischargingTime: bat.dischargingTime }
+  s.screen.hz = hz
+
+  // A battery that isn't full, or is discharging, means a portable machine.
+  const hasBattery = bat && (bat.level < 1 || !bat.charging || Number.isFinite(bat.dischargingTime))
+  s.form = s.mobile ? 'มือถือ / แท็บเล็ต' : hasBattery || /laptop|max-q|mobile/i.test(s.gpu ?? '') ? 'โน้ตบุ๊ก' : bat ? 'เดสก์ท็อป หรือโน้ตบุ๊กที่ชาร์จเต็ม' : 'ไม่ทราบ'
   return s
 }
 
-function gpuName() {
+function webglRenderer() {
   try {
-    const gl = document.createElement('canvas').getContext('webgl')
+    const gl = document.createElement('canvas').getContext('webgl', { powerPreference: 'high-performance' })
     if (!gl) return null
     const ext = gl.getExtension('WEBGL_debug_renderer_info')
     const raw = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)
     gl.getExtension('WEBGL_lose_context')?.loseContext()
-    // "ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Laptop GPU (0x..) Direct3D11 ..., D3D11)" → the GPU name
-    const angle = raw.match(/^ANGLE \((.*)\)$/)
-    const name = angle ? angle[1].split(', ')[1] ?? angle[1] : raw
-    return name.replace(/\s*\(0x[0-9a-f]+\)/i, '').replace(/\s*(Direct3D|OpenGL|\/PCIe|, ).*$/, '').trim()
+    return raw
   } catch {
     return null
   }
 }
 
+// "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 4080 Laptop GPU/PCIe/SSE2, OpenGL 4.5.0)"
+// "ANGLE (AMD, AMD Radeon 780M (radeonsi, gfx1103_r1, LLVM 17.0.6), OpenGL 4.6)"
+// "ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Laptop GPU (0x00002717) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+export function cleanGpu(raw) {
+  if (!raw) return null
+  let name = raw
+  const angle = raw.match(/^ANGLE \((.*)\)$/)
+  if (angle) {
+    const parts = []
+    let depth = 0
+    let cur = ''
+    for (const ch of angle[1]) {
+      if (ch === '(') depth++
+      if (ch === ')') depth--
+      if (ch === ',' && depth === 0) { parts.push(cur.trim()); cur = '' } else cur += ch
+    }
+    parts.push(cur.trim())
+    name = parts[1] ?? parts[0]
+  }
+  return name
+    .replace(/\s*\(0x[0-9a-f]+\)/gi, '')
+    .replace(/\s*\((radeonsi|llvm|gfx|rpl|adl|tgl|mtl|lnl|dg2)[^)]*\)/gi, '')
+    .replace(/\/PCIe.*$|\s+Direct3D.*$|\s+OpenGL.*$|\s+vs_\d.*$/i, '')
+    .replace(/^Mesa\s+|^ANGLE Metal Renderer:\s*/i, '')
+    .trim()
+}
+
+async function webgpuInfo() {
+  try {
+    const a = await navigator.gpu?.requestAdapter({ powerPreference: 'high-performance' })
+    if (!a) return null
+    const i = a.info ?? (await a.requestAdapterInfo?.())
+    return i ? { vendor: i.vendor, architecture: i.architecture, device: i.device, description: i.description } : null
+  } catch {
+    return null
+  }
+}
+
+function osName(platform, version = '') {
+  const major = parseInt(version, 10)
+  if (platform === 'Windows') return major >= 13 ? 'Windows 11' : major > 0 ? 'Windows 10' : 'Windows'
+  if (platform === 'macOS') return `macOS ${version.split('.').slice(0, 2).join('.')}`
+  if (platform === 'Android') return `Android ${major || ''}`.trim()
+  return platform || 'ไม่ทราบ'
+}
+
+// Median frame interval over ~0.4 s → Hz, snapped to common panel rates.
+function refreshRate() {
+  return new Promise((resolve) => {
+    const times = []
+    const step = (t) => {
+      times.push(t)
+      if (times.length < 25) return requestAnimationFrame(step)
+      const d = times.slice(1).map((t2, i) => t2 - times[i]).sort((x, y) => x - y)
+      const hz = 1000 / d[Math.floor(d.length / 2)]
+      const snap = [30, 48, 50, 60, 75, 90, 100, 120, 144, 165, 180, 240, 360, 480].reduce((p, c) => (Math.abs(c - hz) < Math.abs(p - hz) ? c : p))
+      resolve(Math.abs(snap - hz) < 6 ? snap : Math.round(hz))
+    }
+    requestAnimationFrame(step)
+    setTimeout(() => resolve(null), 1500)
+  })
+}
+
 // Typical charger for each hardware class. Returns { watts, why }.
 export function estimateWatts(s) {
   const g = s.gpu ?? ''
-  const laptop = /laptop|mobile|max-q/i.test(g)
+  const laptop = /laptop|mobile|max-q/i.test(g) || s.form === 'โน้ตบุ๊ก'
   let best = { watts: s.mobile ? 18 : 65, why: s.mobile ? 'มือถือทั่วไป' : 'โน้ตบุ๊กมาตรฐาน' }
   const consider = (watts, why) => { if (watts > best.watts) best = { watts, why } }
 
   if (s.mobile) {
-    if (/Apple/i.test(g)) consider(Math.min(s.screen.w, s.screen.h) >= 744 ? 35 : 20, 'อุปกรณ์ Apple พกพา')
+    if (/Apple/i.test(g)) consider(Math.min(s.screen.w, s.screen.h) / s.screen.dpr >= 744 ? 35 : 20, 'อุปกรณ์ Apple พกพา')
     if (/Adreno.*\b(7[3-9]\d|8\d\d)\b|Immortalis|Xclipse 9/i.test(g)) consider(45, 'มือถือเรือธง')
     else if (/Adreno|Mali|PowerVR|Xclipse/i.test(g)) consider(25, 'มือถือ Android')
   } else {
@@ -71,6 +156,11 @@ export function estimateWatts(s) {
     else if (/Apple M\d\s*Max/i.test(g)) consider(140, 'MacBook Pro Max')
     else if (/Apple M\d\s*Pro/i.test(g)) consider(96, 'MacBook Pro')
     else if (/Apple/i.test(g)) consider(70, 'Mac ชิป M')
+    // WebGL can still show the iGPU on hybrid laptops; WebGPU's vendor/arch gives the dGPU away
+    if (s.gpuVendor === 'nvidia' && !/nvidia|geforce|rtx|gtx/i.test(g)) {
+      const newGen = /blackwell|lovelace|ada|ampere/i.test(s.gpuArch ?? '')
+      consider(laptop ? (newGen ? 230 : 180) : newGen ? 750 : 550, `การ์ดจอแยก NVIDIA ${s.gpuArch ?? ''}`.trim())
+    }
     if (s.cores >= 24) consider(280, `CPU ${s.cores} เธรด (คลาส HX)`)
     else if (s.cores >= 16) consider(140, `CPU ${s.cores} เธรด`)
   }
@@ -89,8 +179,8 @@ export function measuredWatts(s) {
 }
 
 export function specBonus(s) {
-  const mp = (s.screen.w * s.screen.h * s.screen.dpr ** 2) / 1e6
-  return Math.round((s.cores ?? 4) * 10 + (s.memory ?? 4) * 8 + mp * 10)
+  const mp = (s.screen.w * s.screen.h) / 1e6
+  return Math.round((s.cores ?? 4) * 10 + (s.memory ?? 4) * 8 + mp * 10 + (s.screen.hz ?? 60) / 2)
 }
 
 export const WATT_CHOICES = [5, 10, 20, 45, 65, 100, 140, 240, 280, 330, 500, 1000, 3000, 25000, 5e6, 1.21e9, 1e12, 1e17, 3.8e26, 1e42]

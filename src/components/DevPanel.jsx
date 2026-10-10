@@ -3,7 +3,7 @@ import { TIERS } from '../appraisal/specs.js'
 import { big, si } from '../game/format.js'
 
 // ?dev — skip the ceremony and poke every knob.
-export default function DevPanel({ watts, setWatts, power, setPower, fake, setFake, speed, setSpeed, score, tier, onFire, onReplay, onShowGate }) {
+export default function DevPanel({ specs, est, watts, setWatts, power, setPower, fake, setFake, speed, setSpeed, score, tier, onFire, onReplay, onShowGate }) {
   const [open, setOpen] = useState(true)
   const [text, setText] = useState('')
   const apply = () => {
@@ -59,6 +59,13 @@ export default function DevPanel({ watts, setWatts, power, setPower, fake, setFa
         <button type="button" onClick={onReplay}>เล่นการประเมินใหม่</button>
         <button type="button" onClick={onShowGate}>เปิดข้อตกลง</button>
       </div>
+
+      {specs && (
+        <details>
+          <summary>raw spec (ที่เบราว์เซอร์บอกจริง)</summary>
+          <pre>{JSON.stringify({ estimate: est, ...specs }, null, 1)}</pre>
+        </details>
+      )}
     </aside>
   )
 }

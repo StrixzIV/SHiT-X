@@ -318,8 +318,6 @@
 }
 @keyframes slide-up { from { transform: translate(-50%, 100%); } }
 .result-sub { text-align: center; margin: 0 0 14px; color: var(--text); }
-.result-actions { display: grid; gap: 8px; }
-@media (min-width: 520px) { .result-actions { grid-template-columns: 1fr 1fr; } }
 .act { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: 14px; text-decoration: none; color: var(--text); border: 1px solid var(--line); background: var(--ink-3); }
 .act svg { color: var(--gold); flex: none; }
 .act.red svg { color: var(--red); }
@@ -366,10 +364,6 @@ sub { font-size: .7em; vertical-align: baseline; position: relative; top: .25em;
 .m2-badge b { display: block; white-space: nowrap; font: 400 42px/1 var(--pixel); }
 
 
-/* dial goes past the scale */
-.needle.overload { animation: needle-spin var(--spin) linear infinite; }
-@keyframes needle-spin { from { transform: rotate(-90deg); } to { transform: rotate(270deg); } }
-.overload-note { color: var(--red) !important; animation: zap .6s steps(1) infinite; }
 
 /* scoring cards (Balatro-style trigger row) */
 .score-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 22px; }
@@ -444,3 +438,30 @@ sub { font-size: .7em; vertical-align: baseline; position: relative; top: .25em;
 .dev button.on { background: #22c55e; color: #052e16; }
 .dev button.go { border-color: var(--gold); color: var(--gold-hi); }
 .dev input { flex: 1; min-width: 0; padding: 3px 6px; border-radius: 6px; border: 1px solid #166534; background: #000; color: #bbf7d0; font: inherit; }
+
+/* appraisal meter ladder */
+.meter { animation: meter-in .6s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes meter-in { from { transform: rotateX(90deg) scale(.6); opacity: 0; } }
+.meter-name b { display: block; font: 700 15px var(--serif-th); color: var(--gold-hi); }
+.meter-name small { display: block; font-size: 11px; color: var(--muted); }
+.meter-flux .dial, .meter-god .dial { filter: drop-shadow(0 0 12px #7df9ff); }
+.meter-solar .dial { filter: drop-shadow(0 0 14px #f97316); }
+.meter-god .dial { filter: drop-shadow(0 0 18px #a855f7); }
+
+/* responders on the result sheet */
+.chain { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted); }
+.chain li s { color: #8a857a; }
+.chain li span { color: var(--red); }
+.responder { padding: 14px; border-radius: 16px; border: 1px solid var(--gold); background: var(--ink-3); animation: stamp .5s cubic-bezier(.2, 1.8, .4, 1); }
+.responder h3 { margin: 4px 0 0; font: 700 22px var(--serif-th); }
+.responder .who { color: var(--muted); font-size: 12px; }
+.responder .reply { margin: 10px 0; line-height: 1.5; }
+.responder-foot { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.responder-foot b { color: var(--text); }
+.responder-foot .act { padding: 8px 12px; }
+.responder.r0 { border-color: #86efac; }
+.responder.r5, .responder.r6 { border-color: #7df9ff; box-shadow: 0 0 30px rgb(125 249 255 / .25); }
+.responder.r7 { border-color: #fff; background: #000; box-shadow: 0 0 40px rgb(168 85 247 / .5); }
+.dev details { margin-top: 6px; }
+.dev summary { cursor: pointer; color: #4ade80; }
+.dev pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 30dvh; overflow-y: auto; margin: 6px 0 0; padding: 6px; background: #000; border-radius: 6px; }
