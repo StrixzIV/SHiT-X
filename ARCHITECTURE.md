@@ -4,6 +4,15 @@
 
 The first version (agy/Gemini) did all detection through one browser API, `navigator.getBattery()`, with a manual toggle as the fallback. That API exists only in Chromium. On iPhone, Safari and Firefox the app could do nothing except fake it. This version treats *every wired interface a device exposes* as a possible probe and scores them together.
 
+## Code layout
+
+The first screen is a **graphic quality** choice (`src/App.jsx` → `src/quality/components/QualitySelectGate.jsx`, stored as `?q=low|medium|high`). `src/quality/QualityRouter.jsx` lazy-loads one tree per quality:
+
+- `src/quality/high/`: the full app described in this document (App, components, pages, fx, scenes, DEV panel)
+- `src/quality/medium/`, `src/quality/low/`: placeholders (blank for now)
+
+Shared, quality-independent code stays at the top of `src/`: `appraisal/`, `game/`, `probes/`, `geo/`, `index.css`. UI paths below such as `fx/…`, `components/…` and `pages/…` are relative to `src/quality/high/`. `?dev` skips the quality gate (High), and the gate itself also shows the DEV tickbox.
+
 ## Layers
 
 ```
@@ -115,7 +124,7 @@ Mute (the header speaker) silences everything, including scenes already playing,
 
 The **DEV tickbox** sits in the top-right of the header and is always visible. `?dev` in the URL does the same, and ticking the box writes `?dev=1` so it survives reloads. Ticking it opens a panel under the box (▾ / ▴ folds it). The whole header sits above every overlay (agreement, calculation, blue screen, black hole), so the tickbox and panel are reachable everywhere. Overlays read the header's measured height from `--header-h` and start below it. Nothing dev-related applies while the box is unticked.
 
-- **ข้าม (skips, each toggleable live):** agreement page · iOS block · appraisal animation · forced manual charge · calculation (straight to the result with its effects) · 0.3 s hold
+- **ข้าม (skips, each toggleable live):** agreement page · iOS block · region block · appraisal animation · forced manual charge · calculation (straight to the result with its effects) · 0.3 s hold
 - **ค่า (knobs):** any wattage (`280`, `1.21e9`, `1e42`) or a tier button · power auto / on / off · fake USB-C devices · speed 1× / 3× / 10×
 - **ยิง FX:** the real score, or any level L0–L7
 - **Stress test:** all levels L0→L7 back-to-back (each result closes itself, the last stays) · real score ×5 · a random wattage every 0.35 s for 10 s · 50 fake USB-C · max chaos (Ω + 30 fake devices + powered) · stop · FPS meter
@@ -161,6 +170,10 @@ Every sensor needs a secure context (https or localhost). On a plain-http LAN ad
 ### iOS is blocked
 
 Every iOS browser is WebKit in Thailand (the EU-only alternative-engine rules don't apply). WebKit gives pages no charging state, USB, Serial, HID or MIDI. iPhones and iPads get a joke screen with no way through (`components/IosBlock.jsx`). It shows "เสียใจด้วยนะ ชาว iOS", a random excuse, an appeal button that always gets rejected, and a share button to open the link on a computer or Android. Only the DEV skip "ข้ามหน้าบล็อก iOS" gets past it, for testing.
+
+### Region block (`src/geo/`, `components/AfricaBlock.jsx`)
+
+Merged from `feat/geo-blockade`. On load the High app looks up the visitor's country with free IP-geolocation services (`api.country.is`, then `ipwho.is`), cached per session. Visitors from African countries get the "Your region doesn't have floods" page instead of the app. It sits next to the iOS block, under the header, so DEV stays reachable. `?country=XX` (or `?test_country=XX`) forces a country for testing. The DEV skip "ข้ามหน้าบล็อกภูมิภาค" bypasses it. The branch also includes a Firebase Cloud Function version (`functions/`, Blaze plan) and copies `index.html` into `functions/dist` during `pnpm build`.
 
 ### Browser compatibility
 

@@ -83,7 +83,7 @@ Order of the cards in the calculation:
 
 ---
 
-## 4. Result scenes, verdicts and responders (`src/fx/CalcOverlay.jsx`, `src/fx/scenes/`, `src/game/responders.js`)
+## 4. Result scenes, verdicts and responders (`src/quality/high/fx/CalcOverlay.jsx`, `src/quality/high/fx/scenes/`, `src/game/responders.js`)
 
 - [ ] Loading: black page, white motes drifting slowly around the centre, the Balatro tally (cards + chips × mult + sounds), then the total ticks up
 - [ ] Then a hard cut (no transition) to the level's scene; the result sheet slides up over it later, with "<total> V" and the verdict at the top
@@ -122,6 +122,9 @@ Order of the cards in the calculation:
 
 ### Entry
 
+- [ ] **Graphic quality screen** (first load without `?q`): Low / Medium / High tiles; "เข้าสู่ระบบ (HIGH)" sets `?q=high`. Low and Medium are blank placeholders. The DEV tickbox is in its top-right corner.
+- [ ] Header shows the quality dropdown + ✦ (reopens the quality screen)
+- [ ] **Region block:** `?q=high&country=NG` shows "Your region doesn't have floods", with the header and DEV still usable; DEV's "ข้ามหน้าบล็อกภูมิภาค" skip lets you through
 - [ ] **iOS (iPhone / iPad, any browser):** joke screen showing
   - the swaying apple
   - a random excuse
@@ -229,6 +232,7 @@ Tiles:
 
 - [ ] ข้ามหน้าข้อตกลง: off brings the agreement back (with the panel still on top), on returns to the main page
 - [ ] ข้ามหน้าบล็อก iOS
+- [ ] ข้ามหน้าบล็อกภูมิภาค
 - [ ] ข้ามแอนิเมชันประเมิน (spec rows appear instantly)
 - [ ] ข้ามการบังคับชาร์จด้วยมือ (dip allowed without answering)
 - [ ] ข้ามการคำนวณ (straight to the result, effects still on)
