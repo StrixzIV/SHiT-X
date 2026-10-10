@@ -1,16 +1,15 @@
-# React + Vite
+# iLeak — ตรวจไฟรั่วในน้ำท่วมผ่านสาย USB-C
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Dip one end of a cable in the flood, plug the other end into your device, then play the hand. Any wired port counts as a probe (USB-C is best), and each probe's reading is scored Balatro-style. Beat 220 V and you have a leak.
 
-Currently, two official plugins are available:
+```sh
+pnpm install
+pnpm dev          # http://localhost:5173
+pnpm dev --host   # phones: mic/serial need HTTPS outside localhost
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Architecture, device matrix, native bridge: [ARCHITECTURE.md](ARCHITECTURE.md)
+- Our own wired probe firmware: [hardware/ileak-probe](hardware/ileak-probe/ileak-probe.ino)
+- Add a port: write one file in `src/probes/adapters/`, register it in `src/probes/index.js`
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Satire for The Stupid Hackathon Thailand X. Do not put electronics in real flood water.
