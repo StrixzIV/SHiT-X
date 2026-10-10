@@ -39,8 +39,8 @@ function makeBus({ id, name, label, api, xmult, mult, why, chips }) {
 
 export const webusb = makeBus({
   id: 'webusb',
-  name: 'Raw USB Joker',
-  label: 'อุปกรณ์ USB ใดๆ',
+  name: 'อุปกรณ์ USB',
+  label: 'แฟลชไดรฟ์ ฮับ หรืออะไรก็ได้ที่เสียบ USB',
   api: 'usb',
   xmult: 2,
   why: 'ไม่มี WebUSB (iOS/Safari/Firefox)',
@@ -49,8 +49,8 @@ export const webusb = makeBus({
 
 export const webhid = makeBus({
   id: 'webhid',
-  name: 'HID Joker',
-  label: 'คีย์บอร์ด/จอย/อะไรก็ได้',
+  name: 'คีย์บอร์ด / เมาส์ USB',
+  label: 'อุปกรณ์ HID ที่เสียบสาย',
   api: 'hid',
   mult: 3,
   why: 'ไม่มี WebHID (iOS/Safari/Firefox)',

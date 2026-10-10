@@ -2,6 +2,7 @@
 // its power brick is. Browsers never expose real wattage, so the GPU / CPU
 // class decides it, and a live charge-rate reading can only raise it.
 // `raw` keeps every source string so the dev panel can show what was seen.
+import { androidBrand, appleModel, detectBrowser, specialDevice } from './devices.js'
 
 export async function readSpecs() {
   const ua = navigator.userAgent
@@ -15,7 +16,10 @@ export async function readSpecs() {
     gpuVendor: null,
     mobile: /Android|iPhone|iPad|Mobile/i.test(ua),
     platform: platformFromUA(ua),
-    browser: browserFromUA(ua),
+    browser: detectBrowser(ua).label,
+    brand: null,
+    apple: null,
+    special: null,
     model: null,
     arch: null,
     battery: null,
@@ -37,7 +41,8 @@ export async function readSpecs() {
 
   if (s.platform.startsWith('iOS') || s.platform.startsWith('iPadOS')) {
     s.mobile = true
-    s.model = iPhoneModel()
+    s.apple = appleModel()
+    s.model = s.apple?.model ?? null
   }
   if (hi) {
     s.raw.uach = hi
@@ -46,6 +51,14 @@ export async function readSpecs() {
     s.arch = hi.architecture ? `${hi.architecture}${hi.bitness ? `-${hi.bitness}` : ''}` : null
     s.mobile = hi.mobile ?? s.mobile
   }
+  // Android WebViews / Firefox: no UA-CH, but older-style UAs still carry "Android 13; <model> Build/"
+  const av = ua.match(/Android (\d+)/)
+  if (av && !hi) s.platform = `Android ${av[1]}`
+  const am = ua.match(/Android [\d.]+; ([^;)]+?)(?: Build\/|\))/)
+  if (!s.model && am && am[1] !== 'K' && !/^(Mobile|Tablet|wv)$/.test(am[1])) s.model = am[1].trim()
+  s.brand = androidBrand(s.model)
+  if (s.brand) s.model = `${s.brand.brand} (${s.model})`
+  s.special = specialDevice(ua, s.gpu ?? '')
   if (gpu) {
     s.raw.webgpu = gpu
     s.gpuVendor = gpu.vendor || null
@@ -57,7 +70,8 @@ export async function readSpecs() {
 
   // A battery that isn't full, or is discharging, means a portable machine.
   const hasBattery = bat && (bat.level < 1 || !bat.charging || Number.isFinite(bat.dischargingTime))
-  s.form = s.mobile ? 'มือถือ / แท็บเล็ต' : hasBattery || /laptop|max-q|mobile/i.test(s.gpu ?? '') ? 'โน้ตบุ๊ก' : bat ? 'เดสก์ท็อป หรือโน้ตบุ๊กที่ชาร์จเต็ม' : 'ไม่ทราบ'
+  s.form = s.special ? s.special.form : s.mobile ? 'มือถือ / แท็บเล็ต' : hasBattery || /laptop|max-q|mobile/i.test(s.gpu ?? '') ? 'โน้ตบุ๊ก' : bat ? 'เดสก์ท็อป หรือโน้ตบุ๊กที่ชาร์จเต็ม' : 'ไม่ทราบ'
+  if (s.special && !s.model) s.model = s.special.device
   return s
 }
 
@@ -67,6 +81,8 @@ function platformFromUA(ua) {
   const ios = ua.match(/(iPhone|iPad|iPod).*? OS (\d+)[_.](\d+)/)
   if (ios) return `${ios[1] === 'iPad' ? 'iPadOS' : 'iOS'} ${ios[2]}.${ios[3]}`
   if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return 'iPadOS'
+  const odd = [[/Nintendo/, 'Nintendo Switch OS'], [/PlayStation/, 'PlayStation OS'], [/Xbox/, 'Xbox OS'], [/Tizen/, 'Tizen (Samsung TV)'], [/Web0S|webOS/, 'webOS (LG TV)'], [/Tesla/, 'Tesla OS']].find(([re]) => re.test(ua))
+  if (odd) return odd[1]
   if (/Windows/.test(ua)) return 'Windows'
   if (/Android/.test(ua)) return 'Android'
   if (/CrOS/.test(ua)) return 'ChromeOS'
@@ -75,32 +91,7 @@ function platformFromUA(ua) {
   return 'ไม่ทราบ'
 }
 
-function browserFromUA(ua) {
-  const webkitOnly = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)
-  const name = /CriOS|Chrome\//.test(ua) ? 'Chrome' : /FxiOS|Firefox\//.test(ua) ? 'Firefox' : /EdgiOS|Edg\//.test(ua) ? 'Edge' : /Safari\//.test(ua) ? 'Safari' : 'ไม่ทราบ'
-  return webkitOnly && name !== 'Safari' ? `${name} (ไส้ใน WebKit)` : name
-}
 
-// iOS never reports a model, so guess from the portrait screen size in points.
-const IPHONES = {
-  '375x667@2': 'iPhone SE / 8',
-  '375x812@3': 'iPhone X / XS / 11 Pro / mini',
-  '414x896@2': 'iPhone XR / 11',
-  '414x896@3': 'iPhone XS Max / 11 Pro Max',
-  '390x844@3': 'iPhone 12 / 13 / 14',
-  '428x926@3': 'iPhone 12–13 Pro Max / 14 Plus',
-  '393x852@3': 'iPhone 14 Pro / 15 / 15 Pro / 16',
-  '430x932@3': 'iPhone 14 Pro Max / 15 Plus / 15 Pro Max / 16 Plus',
-  '402x874@3': 'iPhone 16 Pro / 17 / 17 Pro',
-  '440x956@3': 'iPhone 16 Pro Max / 17 Pro Max',
-  '420x912@3': 'iPhone Air',
-}
-function iPhoneModel() {
-  const w = Math.min(screen.width, screen.height)
-  const h = Math.max(screen.width, screen.height)
-  const name = IPHONES[`${w}x${h}@${Math.round(devicePixelRatio)}`]
-  return name ? `${name} (เดาจากขนาดจอ)` : null
-}
 
 function webglRenderer() {
   try {
@@ -185,12 +176,15 @@ export function estimateWatts(s) {
   let best = { watts: s.mobile ? 18 : 65, why: s.mobile ? 'มือถือทั่วไป' : 'โน้ตบุ๊กมาตรฐาน' }
   const consider = (watts, why) => { if (watts > best.watts) best = { watts, why } }
 
+  if (s.special) {
+    const measured = measuredWatts(s)
+    return { watts: Math.max(s.special.watts, measured ?? 0), why: s.special.why, measured }
+  }
+
   if (s.mobile) {
-    if (/Apple/i.test(g) || /^i(OS|PadOS)/.test(s.platform)) {
-      if (Math.min(s.screen.w, s.screen.h) / s.screen.dpr >= 744) consider(35, 'iPad')
-      else if (/1[5-7]|Air|16 Pro/.test(s.model ?? '')) consider(27, 'iPhone ยุค USB-C ชาร์จเร็ว')
-      else consider(20, 'iPhone')
-    }
+    if (s.apple) consider(s.apple.watts, s.apple.watts >= 27 ? `${s.apple.model.split(' (')[0]} ชาร์จเร็ว USB-C` : s.apple.model.split(' (')[0])
+    else if (/Apple/i.test(g) || /^i(OS|PadOS)/.test(s.platform)) consider(20, 'อุปกรณ์ Apple')
+    if (s.brand) consider(s.brand.watts, `${s.brand.brand} ชาร์จเร็ว`)
     if (/Adreno.*\b(7[3-9]\d|8\d\d)\b|Immortalis|Xclipse 9/i.test(g)) consider(45, 'มือถือเรือธง')
     else if (/Adreno|Mali|PowerVR|Xclipse/i.test(g)) consider(25, 'มือถือ Android')
   } else {

@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 
 // Split into grapheme clusters, not code points, so Thai tone marks and
 // vowels (่ ้ ๊ ั ิ ุ ำ) stay attached to their base letter.
+// Browsers without Intl.Segmenter (Firefox < 125, Safari < 14.1) fall back to
+// gluing Thai above/below marks and sara am onto the preceding letter.
 const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('th', { granularity: 'grapheme' }) : null
-const graphemes = (text) => (segmenter ? [...segmenter.segment(text)].map((g) => g.segment) : [...text])
+const THAI_CLUSTER = /[\s\S][\u0E31\u0E33-\u0E3A\u0E47-\u0E4E]*/g
+const graphemes = (text) => (segmenter ? [...segmenter.segment(text)].map((g) => g.segment) : text.match(THAI_CLUSTER) ?? [])
 
 // Per-letter wobble, like Balatro's floating title text.
 export function WavyText({ text, className = '' }) {

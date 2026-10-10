@@ -63,8 +63,8 @@ export default function serial() {
 
   return {
     id: 'serial',
-    name: 'iLeak Probe',
-    label: 'โพรบสายไฟของเราเอง',
+    name: 'โพรบ iLeak',
+    label: 'อุปกรณ์วัดไฟของเรา ต่อสาย USB',
     port: 'USB-C',
     xmult: 3,
     flavor: 'ESP32/RP2040 + สายไฟ 2 เส้น',

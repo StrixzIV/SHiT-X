@@ -6,8 +6,18 @@ import { ADAPTER_FACTORIES } from './index.js'
 // update(patch) merges into { supported, armed, live, reading, detail, port?, mult?, xmult? }
 const adapters = ADAPTER_FACTORIES.map((f) => f())
 
+// One broken browser API must never take the page down: support checks and
+// start() are both guarded.
+function safeSupport(a) {
+  try {
+    return a.support()
+  } catch (e) {
+    return { ok: false, why: `เบราว์เซอร์นี้ใช้ไม่ได้ (${e.message})` }
+  }
+}
+
 function initial(a) {
-  const s = a.support()
+  const s = safeSupport(a)
   return { supported: s.ok, armed: !a.arm, live: false, reading: 0, detail: s.ok ? a.hint ?? 'กำลังฟัง…' : s.why }
 }
 
@@ -20,7 +30,16 @@ export function useProbes() {
   )
 
   useEffect(() => {
-    const stops = adapters.filter((a) => a.support().ok && a.start).map((a) => a.start(updater(a.id)))
+    const stops = adapters
+      .filter((a) => safeSupport(a).ok && a.start)
+      .map((a) => {
+        try {
+          return a.start(updater(a.id))
+        } catch (e) {
+          updater(a.id)({ supported: false, detail: `เริ่มไม่ได้: ${e.message}` })
+          return null
+        }
+      })
     return () => stops.forEach((stop) => stop?.())
   }, [updater])
 
@@ -41,7 +60,7 @@ export function useProbes() {
 
   const refresh = useCallback(async (id) => {
     const a = adapters.find((x) => x.id === id)
-    if (a?.support().ok) await a.refresh?.(updater(id))
+    if (a && safeSupport(a).ok) await a.refresh?.(updater(id))
   }, [updater])
 
   const cards = adapters.map((a) => {

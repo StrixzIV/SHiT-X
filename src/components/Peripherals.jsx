@@ -1,10 +1,10 @@
-import { BatteryCharging, Cable, Cpu, EthernetPort, Gamepad2, Headphones, Keyboard, Monitor, Mouse, Pill, Smartphone, Usb } from 'lucide-react'
+import { BatteryCharging, Cable, Camera, Cpu, EthernetPort, Gamepad2, Headphones, Keyboard, Monitor, Mouse, Music, Pill, Smartphone, Usb } from 'lucide-react'
 import { peripheralWeight } from '../game/score.js'
 import { CountUp } from '../fx/juice.jsx'
 
 const ICONS = {
   serial: Cable, battery: BatteryCharging, webusb: Usb, audio: Headphones, display: Monitor,
-  webhid: Keyboard, gamepad: Gamepad2, otg: Mouse, ethernet: EthernetPort, native: Smartphone, placebo: Pill,
+  webhid: Keyboard, midi: Music, camera: Camera, gamepad: Gamepad2, otg: Mouse, ethernet: EthernetPort, native: Smartphone, placebo: Pill,
 }
 
 export default function Peripherals({ items, tap, mult2 }) {

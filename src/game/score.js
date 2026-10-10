@@ -41,4 +41,8 @@ export function computeScore({ watts, bonus, tier, peripherals, powered, fakeUsb
 
 // 6 = nuke (≥ 100M), 7 = black hole (≥ 1e15)
 const LEVELS = [0, 1, 2000, 8000, 30000, 100000, 1e8, 1e15]
-export const levelFor = (total) => LEVELS.findLastIndex((min) => total >= min)
+export function levelFor(total) {
+  let level = 0
+  LEVELS.forEach((min, i) => { if (total >= min) level = i })
+  return level
+}

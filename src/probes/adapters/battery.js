@@ -1,8 +1,18 @@
 // Battery Status API: "charging" flips true when a USB-C charger is plugged in,
 // which iLeak interprets as the flood water feeding the cable.
 // Some browsers (e.g. Chrome on Linux via UPower) drop `chargingchange`, so we
-// also poll the properties, re-acquire the manager, and expose refresh().
-const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+// also poll the properties (4×/s, cheap: only changes re-render), re-acquire
+// the manager every 1.5 s and on focus, and expose refresh().
+import { detectBrowser } from '../../appraisal/devices.js'
+
+function unsupportedWhy() {
+  const b = detectBrowser()
+  if (b.ios) return 'iPhone/iPad ไม่บอกสถานะชาร์จให้เว็บ (ทุกเบราว์เซอร์บน iOS ใช้ WebKit เหมือน Safari)'
+  if (!window.isSecureContext) return 'ต้องเปิดผ่าน https หรือ localhost ถึงจะอ่านแบตได้'
+  if (b.inApp) return `แอป ${b.inApp} ไม่ให้เว็บอ่านแบต — เปิดในเบราว์เซอร์จริง`
+  if (b.engine === 'Gecko') return 'Firefox ถอด Battery API ออกไปแล้ว'
+  return `${b.name} ไม่บอกสถานะชาร์จให้เว็บ`
+}
 
 export default function battery() {
   let bat, update, last
@@ -43,31 +53,28 @@ export default function battery() {
 
   return {
     id: 'battery',
-    name: 'Battery Joker',
-    label: 'ขั้วชาร์จแบต',
+    name: 'สายชาร์จ',
+    label: 'ตรวจว่าเครื่องกำลังชาร์จอยู่',
     port: 'USB-C',
     xmult: 2,
     flavor: 'ชาร์จเข้า = น้ำมีไฟ',
     support: () =>
-      'getBattery' in navigator
-        ? { ok: true }
-        : {
-            ok: false,
-            why: IOS
-              ? 'iPhone/iPad ไม่บอกสถานะชาร์จให้เว็บ (Chrome บน iOS ก็ใช้ WebKit เหมือน Safari)'
-              : !window.isSecureContext
-                ? 'ต้องเปิดผ่าน https หรือ localhost ถึงจะอ่านแบตได้'
-                : 'เบราว์เซอร์นี้ไม่บอกสถานะชาร์จ (Safari/Firefox)',
-          },
+      navigator.brave
+        ? { ok: false, why: 'Brave ปลอมค่าแบตเพื่อความเป็นส่วนตัว — ติ๊กยืนยันเอง' }
+        : 'getBattery' in navigator
+          ? { ok: true }
+          : { ok: false, why: unsupportedWhy() },
     start(u) {
       update = u
       gen++
       acquire()
-      const poll = setInterval(read, 2000)
-      const reacquire = setInterval(acquire, 10000)
+      const poll = setInterval(read, 250)
+      const reacquire = setInterval(acquire, 1500)
       const onVisible = () => document.visibilityState === 'visible' && acquire()
       document.addEventListener('visibilitychange', onVisible)
+      window.addEventListener('focus', acquire)
       return () => {
+        window.removeEventListener('focus', acquire)
         gen++
         clearInterval(poll)
         clearInterval(reacquire)

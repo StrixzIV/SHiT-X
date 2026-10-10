@@ -18,9 +18,9 @@ function powerText(p) {
 function PowerCheck({ power: p }) {
   const status = p.charging ? '⚡ ตรวจพบไฟเข้าเครื่อง' : p.known ? 'ยังไม่พบไฟเข้าเครื่อง' : 'เบราว์เซอร์นี้ไม่บอกสถานะชาร์จ'
   const hint = p.charging
-    ? 'ระบบจะตรวจซ้ำให้อัตโนมัติทุก 2 วินาที'
+    ? 'ระบบเฝ้าดูให้ตลอด ถอดสายเมื่อไหร่จะรู้ทันที'
     : p.known
-      ? 'เสียบสายแล้วแต่ยังไม่ขึ้น? กดตรวจซ้ำ หรือติ๊กยืนยันเอง'
+      ? 'ระบบเฝ้าดูให้ตลอด เสียบแล้วยังไม่ขึ้นใน 2 วินาที? กดตรวจซ้ำ หรือติ๊กยืนยันเอง'
       : p.why
   return (
     <div className={`power-check ${p.charging ? 'on' : !p.known && !p.userPlugged ? 'ask' : ''}`}>
@@ -92,9 +92,6 @@ export default function Appraisal({ specs, est, watts, override, setOverride, ti
         <span className="eyebrow">ขั้นที่ 1 · การประเมินฐานะอุปกรณ์</span>
         <h2>เรากำลังตัดสินอุปกรณ์ของท่าน</h2>
       </div>
-      {!window.isSecureContext && (
-        <p className="insecure">⚠️ เปิดผ่าน http:// — เบราว์เซอร์ปิดเซ็นเซอร์แบต ไมค์ และ USB ให้เปิดผ่าน https หรือ localhost</p>
-      )}
 
       <div className="appraisal-grid">
         <dl className="spec-list">

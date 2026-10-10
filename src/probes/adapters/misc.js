@@ -4,7 +4,7 @@
 export function ethernet() {
   const c = navigator.connection
   return {
-    id: 'ethernet', name: 'LAN Joker', label: 'สายแลน (USB-C → RJ45)', port: 'Ethernet', mult: 3,
+    id: 'ethernet', name: 'สายแลน', label: 'ต่อผ่านอะแดปเตอร์ USB-C → LAN', port: 'Ethernet', mult: 3,
     flavor: 'Cat6 นำไฟดีกว่า Cat5',
     support: () => (c && 'type' in c ? { ok: true } : { ok: false, why: 'เบราว์เซอร์ไม่บอกชนิดเครือข่าย' }),
     start(update) {
@@ -19,7 +19,7 @@ export function ethernet() {
 // USB-C DisplayPort alt-mode / HDMI: an extra screen appears.
 export function display() {
   return {
-    id: 'display', name: 'Alt-Mode Joker', label: 'จอนอก (HDMI / DP alt-mode)', port: 'USB-C', mult: 2,
+    id: 'display', name: 'จอนอก', label: 'ต่อจอผ่าน HDMI หรือ USB-C', port: 'USB-C', mult: 2,
     flavor: 'จอเพิ่ม = ไฟเพิ่ม',
     support: () => ('isExtended' in screen ? { ok: true } : { ok: false, why: 'เบราว์เซอร์ไม่รู้จักจอนอก' }),
     start(update) {
@@ -36,7 +36,7 @@ export function otgPointer() {
   const coarse = matchMedia('(pointer: coarse)')
   const fine = matchMedia('(any-pointer: fine)')
   return {
-    id: 'otg', name: 'OTG Joker', label: 'เมาส์ OTG บนมือถือ', port: 'USB-C', mult: 1,
+    id: 'otg', name: 'เมาส์บนมือถือ', label: 'เสียบเมาส์เข้ามือถือผ่าน OTG', port: 'USB-C', mult: 1,
     flavor: 'เมาส์ลอยน้ำ',
     support: () => (coarse.matches ? { ok: true } : { ok: false, why: 'เครื่องนี้มีเมาส์อยู่แล้ว (ไม่ใช่มือถือ)' }),
     start(update) {
@@ -53,7 +53,7 @@ export function otgPointer() {
 export function native() {
   const has = () => !!(window.ILeakNative || window.Capacitor?.isNativePlatform?.())
   return {
-    id: 'native', name: 'Native Joker', label: 'ตัวแอป (Android/iOS/Desktop)', port: 'USB-C', xmult: 3,
+    id: 'native', name: 'แอปติดตั้ง', label: 'เฉพาะเวอร์ชันแอป Android / Desktop', port: 'USB-C', xmult: 3,
     flavor: 'ทะลุข้อจำกัดเบราว์เซอร์',
     support: () => (has() ? { ok: true } : { ok: false, why: 'ไม่ได้เปิดผ่านแอป native' }),
     start(update) {
@@ -71,7 +71,7 @@ export function native() {
 // Always available: a placebo toggle for stage demos and unsupported devices.
 export function placebo() {
   return {
-    id: 'placebo', name: 'Placebo Joker', label: 'ปุ่มจำลอง (เชื่อเถอะ)', port: 'ใจ', mult: 1,
+    id: 'placebo', name: 'ปุ่มจำลอง', label: 'ไม่มีสายก็กดอันนี้', port: 'ใจ', mult: 1,
     flavor: 'ได้ผลถ้าคุณเชื่อ',
     hint: 'แตะเพื่อเปิด/ปิด',
     support: () => ({ ok: true }),

@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react'
 import { beep } from '../fx/sfx.js'
 
+// iOS < 13 and other old WebViews have no Pointer Events.
+const HAS_POINTER = typeof window !== 'undefined' && 'PointerEvent' in window
+
 // Press and hold to commit. Builds anticipation: it shakes harder and the
 // pitch climbs the longer you hold; letting go drains it.
 export default function HoldButton({ ms = 1500, onFire, children, disabled }) {
@@ -42,10 +45,9 @@ export default function HoldButton({ ms = 1500, onFire, children, disabled }) {
       className="hold"
       disabled={disabled}
       style={{ '--p': p }}
-      onPointerDown={down}
-      onPointerUp={up}
-      onPointerLeave={up}
-      onPointerCancel={up}
+      {...(HAS_POINTER
+        ? { onPointerDown: down, onPointerUp: up, onPointerLeave: up, onPointerCancel: up }
+        : { onTouchStart: down, onTouchEnd: up, onTouchCancel: up, onMouseDown: down, onMouseUp: up, onMouseLeave: up })}
       onKeyDown={down}
       onKeyUp={up}
       onContextMenu={(e) => e.preventDefault()}

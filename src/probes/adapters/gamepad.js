@@ -3,8 +3,8 @@
 export default function gamepad() {
   return {
     id: 'gamepad',
-    name: 'Analog Joker',
-    label: 'จอยเกม (ก้านอนาล็อก = โวลต์มิเตอร์)',
+    name: 'จอยเกม',
+    label: 'จอยที่เสียบสาย (กดปุ่มหนึ่งครั้ง)',
     port: 'USB-C',
     mult: 2,
     flavor: 'โยกก้าน = ไฟรั่วมากขึ้น',

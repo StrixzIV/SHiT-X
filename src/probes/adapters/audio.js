@@ -60,8 +60,8 @@ export default function audio() {
 
   return {
     id: 'audio',
-    name: 'Jack Joker',
-    label: 'แจ็คหูฟัง / USB-C audio',
+    name: 'แจ็คหูฟัง / ไมค์',
+    label: 'หูฟังมีสาย หรือ USB-C audio',
     port: '3.5mm',
     mult: 4,
     flavor: 'ขั้วไมค์ 2 ขา จุ่มน้ำได้',

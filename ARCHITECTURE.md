@@ -114,25 +114,44 @@ Open with **`?dev`** (e.g. `http://localhost:5173/?dev`). It skips the agreement
 
 ## Device support matrix
 
-Cards sit in hand order. USB-C cards come first and carry the biggest multipliers, because USB-C is the main supported port.
+Cards sit in hand order. USB-C cards come first and carry the biggest multipliers, because USB-C is the main supported port. **iOS / iPadOS is blocked on purpose** (see below).
 
-| Card | Port | API | Chrome/Edge desktop | Android Chrome | iOS/iPadOS Safari | Firefox |
+| Card | Port | API | Chrome / Edge / Opera / Samsung (desktop) | Android Chrome / Samsung Internet | Firefox | Safari (macOS) |
 |---|---|---|---|---|---|---|
-| iLeak Probe | USB-C | Web Serial | ✅ | ⚠️ recent Chrome only | ❌ → use audio | ❌ |
-| Battery Joker | USB-C | Battery Status | ✅ | ✅ | ❌ → native shell | ❌ |
-| Raw USB Joker | USB-C | WebUSB | ✅ | ✅ | ❌ | ❌ |
-| HID Joker | USB-C | WebHID | ✅ | ❌ | ❌ | ❌ |
-| Jack Joker | 3.5mm / USB-C audio | getUserMedia + analyser | ✅ | ✅ | ✅ | ✅ |
-| Analog Joker | USB-C | Gamepad | ✅ | ✅ | ✅ | ✅ |
-| Alt-Mode Joker | USB-C (DP/HDMI) | `screen.isExtended` | ✅ | ❌ | ❌ | ❌ |
-| OTG Joker | USB-C | `any-pointer: fine` media query | n/a | ✅ | ✅ (iPad) | ✅ |
-| LAN Joker | Ethernet | `navigator.connection.type` | ❌ | ✅ | ❌ | ❌ |
-| Native Joker | any | native bridge | via Tauri | via Capacitor | via Capacitor | — |
-| Placebo Joker | ใจ (heart) | none | ✅ | ✅ | ✅ | ✅ |
+| โพรบ iLeak | USB-C | Web Serial | ✅ | ⚠️ recent Chrome only | ❌ | ❌ |
+| สายชาร์จ | USB-C | Battery Status (polled 4×/s) | ✅ (Brave fakes it → manual tick) | ✅ | ❌ removed | ❌ |
+| อุปกรณ์ USB | USB-C | WebUSB | ✅ | ✅ | ❌ | ❌ |
+| แจ็คหูฟัง / ไมค์ | 3.5mm / USB-C audio | getUserMedia + analyser | ✅ | ✅ | ✅ | ✅ |
+| จอนอก | USB-C (DP/HDMI) | `screen.isExtended` | ✅ | ❌ | ❌ | ❌ |
+| คีย์บอร์ด / เมาส์ USB | USB-C | WebHID | ✅ | ❌ | ❌ | ❌ |
+| เครื่องดนตรี MIDI | USB-C | Web MIDI | ✅ | ✅ | ✅ | ❌ |
+| กล้อง USB | USB-C | getUserMedia labels | ✅ | ✅ | ✅ | ✅ |
+| จอยเกม | USB-C | Gamepad | ✅ | ✅ | ✅ | ✅ |
+| เมาส์บนมือถือ | USB-C | `any-pointer: fine` | n/a | ✅ | ✅ | n/a |
+| สายแลน | Ethernet | `navigator.connection.type` | ❌ | ✅ | ❌ | ❌ |
+| แอปติดตั้ง | any | native bridge | via Tauri | via Capacitor | — | — |
+| ปุ่มจำลอง | ใจ | none | ✅ | ✅ | ✅ | ✅ |
 
-**Audio is the universal fallback.** Every phone has a mic input, either a 3.5mm TRRS jack or a USB-C/Lightning audio dongle. The Jack Joker:
+All sensors need a secure context (https or localhost). In-app browsers (LINE, Facebook, Messenger, Instagram, TikTok, WeChat, X) usually block them too. A banner offers a way out: LINE gets `?openExternalBrowser=1`, Android gets a Chrome `intent://` link, and iOS gets instructions.
+
+### Devices the appraisal recognizes (`appraisal/devices.js`)
+
+- **Special hardware** overrides the GPU guess: Tesla (250 kW Supercharger → kW tier), Xbox, PlayStation, Nintendo Switch, Steam Deck, Meta Quest, smart TVs (Tizen / webOS / Android TV …), Kindle, Raspberry Pi, Chromebook
+- **Android** by model code (UA-CH `model`, or the `Android 13; <model> Build/` part of WebView UAs): Samsung (S Ultra 45 W …), Pixel, Xiaomi / Redmi / POCO, realme (GT 240 W), OPPO / OnePlus, vivo / iQOO, Huawei / Honor, Nothing, Infinix, TECNO, Motorola, Sony, ASUS ROG
+- **Apple** models by portrait screen size (iPhone SE → 17 Pro Max, iPad mini → iPad Pro 13")
+- **Browsers**: Chrome, Edge, Opera, Samsung Internet, Firefox, Safari, Brave, Vivaldi, Yandex, UC, DuckDuckGo, console/TV browsers, and in-app browsers
+
+### iOS is blocked
+
+Every iOS browser is WebKit, and WebKit gives pages no charging state, USB, Serial, HID or MIDI. iPhones and iPads therefore get a joke screen (`components/IosBlock.jsx`): "เสียใจด้วยนะ ชาว iOS", a random excuse, an appeal button that always gets rejected, and a share button to open the link on a computer or Android. `?dev` bypasses it.
+
+### Browser compatibility
+
+The build targets `es2019 / chrome79 / edge79 / firefox78 / safari13`. Tailwind v4 was removed because it needs Safari 16.4+ / Chrome 111+; a small reset replaces it. Newer APIs are feature-checked: `Intl.Segmenter` falls back to a Thai-aware regex, Pointer Events fall back to touch and mouse, and every adapter's `support()` and `start()` is wrapped, so one broken API can't take the page down. The CSS has fallbacks for `inset`, `dvh` and `-webkit-backdrop-filter`.
+
+**Audio is the universal fallback.** Every phone and computer has a mic input, either a 3.5mm TRRS jack or a USB-C audio dongle. The แจ็คหูฟัง / ไมค์ card:
 - counts any *wired* input it detects by label (`USB`, `headset`, `wired`, …) as live, and
-- detects a tone from the iLeak Probe (frequency ∝ mV). This makes it a one-way wired modem that works on iOS, where Web Serial and WebUSB don't exist.
+- detects a tone from the iLeak Probe (frequency ∝ mV). This makes it a one-way wired modem for browsers without Web Serial or WebUSB, such as Firefox and Safari on macOS.
 
 Mic access requires HTTPS, so for phone demos use `vite --host` behind HTTPS or deploy the app.
 
@@ -157,7 +176,7 @@ window.dispatchEvent(new CustomEvent('ileak:native', {
 }))
 ```
 
-The shell sets `window.ILeakNative` (optionally with `ready()`), and the Native Joker becomes supported. Suggested shells:
+The shell sets `window.ILeakNative` (optionally with `ready()`), and the แอปติดตั้ง card becomes supported. Suggested shells:
 
 | Shell | Platform | Signals |
 |---|---|---|
