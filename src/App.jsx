@@ -1,37 +1,42 @@
 import { useEffect, useState } from 'react'
-import PortalHeader from './components/PortalHeader.jsx'
-import AgreementGate from './components/AgreementGate.jsx'
-import BrowserNotice from './components/BrowserNotice.jsx'
-import IosBlock from './components/IosBlock.jsx'
-import { detectBrowser } from './appraisal/devices.js'
-import MainPage from './pages/MainPage.jsx'
-import { useProbes } from './probes/useProbes.js'
-import { setSound } from './fx/sfx.js'
-
-// ?dev skips the agreement and the appraisal ceremony and shows the dev panel.
-const DEV = new URLSearchParams(location.search).has('dev')
-// iOS can't report anything we need, so it gets a joke screen instead (?dev still bypasses it).
-const IOS_BLOCKED = detectBrowser().ios && !DEV
+import QualityRouter from './quality/QualityRouter.jsx'
+import QualitySelectGate from './quality/components/QualitySelectGate.jsx'
+import { getQualityFromUrl, updateQualityUrl, DEFAULT_QUALITY } from './quality/qualityUrl.js'
 
 export default function App() {
-  const [agreed, setAgreed] = useState(DEV) // never persisted: read it every time
-  const [sound, setSoundState] = useState(true)
-  // Probes live at the app root so open ports/streams survive overlays.
-  const { cards, tap, refresh } = useProbes()
+  const [quality, setQuality] = useState(() => getQualityFromUrl() || DEFAULT_QUALITY)
+  // Show gate on initial landing if no ?q is provided in the URL
+  const [showGate, setShowGate] = useState(() => !new URLSearchParams(window.location.search).has('q'))
 
-  useEffect(() => setSound(sound), [sound])
+  useEffect(() => {
+    const handlePopState = () => {
+      const q = getQualityFromUrl() || DEFAULT_QUALITY
+      setQuality(q)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  const handleSelectQuality = (nextQuality) => {
+    updateQualityUrl(nextQuality)
+    setQuality(nextQuality)
+    setShowGate(false)
+  }
+
+  if (showGate) {
+    return (
+      <QualitySelectGate
+        currentQuality={quality}
+        onSelect={handleSelectQuality}
+      />
+    )
+  }
 
   return (
-    <div className="app">
-      <PortalHeader sound={sound} onSound={() => setSoundState(!sound)} />
-      {IOS_BLOCKED ? (
-        <IosBlock />
-      ) : agreed ? (
-        <MainPage cards={cards} tap={tap} refresh={refresh} dev={DEV} onShowGate={() => setAgreed(false)} />
-      ) : (
-        <AgreementGate onAccept={() => setAgreed(true)} dev={DEV} />
-      )}
-      {!IOS_BLOCKED && <BrowserNotice />}
-    </div>
+    <QualityRouter
+      quality={quality}
+      onQualityChange={handleSelectQuality}
+      onOpenQualityGate={() => setShowGate(true)}
+    />
   )
 }

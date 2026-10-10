@@ -4,9 +4,9 @@ import Peripherals from '../components/Peripherals.jsx'
 import HoldButton from '../components/HoldButton.jsx'
 import DevPanel from '../components/DevPanel.jsx'
 import CalcOverlay from '../fx/CalcOverlay.jsx'
-import { estimateWatts, readSpecs, specBonus, tierFor } from '../appraisal/specs.js'
-import { computeScore } from '../game/score.js'
-import { big } from '../game/format.js'
+import { estimateWatts, readSpecs, specBonus, tierFor } from '../../../appraisal/specs.js'
+import { computeScore } from '../../../game/score.js'
+import { big } from '../../../game/format.js'
 
 // Smallest total that lands on each FX level, nudged up a bit (for dev firing).
 const LEVEL_TARGET = [0, 500, 3000, 12000, 50000, 300000, 5e9, 1e20]

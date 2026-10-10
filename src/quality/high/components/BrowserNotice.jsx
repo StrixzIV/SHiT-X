@@ -1,4 +1,4 @@
-import { detectBrowser, escapeInApp } from '../appraisal/devices.js'
+import { detectBrowser, escapeInApp } from '../../../appraisal/devices.js'
 
 // In-app browsers (LINE, Facebook, IG, TikTok…) and plain http both switch off
 // most sensors. Say so up front and offer a way out.

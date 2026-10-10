@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { TIERS } from '../appraisal/specs.js'
-import { big, si } from '../game/format.js'
+import { TIERS } from '../../../appraisal/specs.js'
+import { big, si } from '../../../game/format.js'
 
 // ?dev — skip the ceremony and poke every knob.
 export default function DevPanel({ specs, est, watts, setWatts, power, setPower, fake, setFake, speed, setSpeed, score, tier, onFire, onReplay, onShowGate }) {
