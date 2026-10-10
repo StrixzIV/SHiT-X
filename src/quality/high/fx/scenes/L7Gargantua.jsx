@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { drive, noise, playFile, reverb, session, tone } from '../audio.js'
+import { shotUniforms } from './gargantua.js'
 
 // Level 7 — Gargantua. Rays are bent by the Schwarzschild photon equation
 // (a = -1.5·h²·r̂ / r⁴, units of Rs = 1), so the lensed disk and photon ring
-// come out of the physics rather than being painted on.
+// come out of the physics rather than being painted on. The shot is framed on the
+// hole's top-right with a slight roll (gargantua.js) and fades up slowly from black.
 const VERT = 'attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }'
 const FRAG = `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -13,6 +15,7 @@ precision mediump float;
 #endif
 uniform vec2 uRes;
 uniform float uTime;
+uniform vec4 uShot; // hole centre (uv), focal length, roll: see gargantua.js
 
 float hash(vec3 p) {
   p = fract(p * 0.3183099 + 0.1);
@@ -29,18 +32,26 @@ float noise2(vec2 p) {
   float d = hash(vec3(i + vec2(1.0, 1.0), 1.0));
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
-vec3 stars(vec3 d) {
-  vec3 col = vec3(0.0);
-  vec3 p = d * 260.0;
+// One layer of stars: a few cells of a 3D grid over the sky hold one star each.
+vec3 starLayer(vec3 d, float cells, float rate, float size, float t) {
+  vec3 p = d * cells;
   vec3 ip = floor(p);
   float h = hash(ip);
-  if (h > 0.982) {
-    float s = smoothstep(0.42, 0.0, length(fract(p) - 0.5));
-    col += s * mix(vec3(0.7, 0.8, 1.0), vec3(1.0, 0.85, 0.7), hash(ip + 3.0)) * (h - 0.982) * 70.0;
-  }
+  if (h < 1.0 - rate) return vec3(0.0);
+  vec3 off = vec3(hash(ip + 1.7), hash(ip + 3.1), hash(ip + 5.3)) - 0.5;
+  float g = smoothstep(size, 0.0, length(fract(p) - 0.5 - off * 0.3));
+  vec3 tint = mix(vec3(0.62, 0.75, 1.0), vec3(1.0, 0.8, 0.58), hash(ip + 7.7));
+  float twinkle = 0.8 + 0.2 * sin(t * (1.5 + 3.0 * h) + 40.0 * h);
+  return tint * g * g * (0.3 + 2.5 * hash(ip + 9.1)) * twinkle;
+}
+vec3 stars(vec3 d, float t) {
+  vec3 col = starLayer(d, 320.0, 0.12, 0.34, t) * 0.7
+           + starLayer(d, 160.0, 0.09, 0.3, t) * 1.4
+           + starLayer(d, 70.0, 0.06, 0.24, t) * 3.0;
+  // a faint Milky Way with dust lanes
   float band = exp(-pow(dot(d, normalize(vec3(0.25, 1.0, 0.35))) * 3.2, 2.0));
-  col += band * vec3(0.09, 0.07, 0.11);
-  return col;
+  float dust = noise2(vec2(atan(d.z, d.x) * 5.0, d.y * 9.0));
+  return col + band * mix(vec3(0.05, 0.04, 0.07), vec3(0.16, 0.12, 0.16), dust);
 }
 vec3 disk(vec3 p, vec3 dir, float t, out float alpha) {
   float r = length(p.xz);
@@ -62,9 +73,14 @@ mat3 lookAt(vec3 ro, vec3 ta) {
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
   float t = uTime;
+  // the shot: hole off to the lower left, camera rolled a little
+  vec2 q = uv - uShot.xy;
+  float cr = cos(uShot.w);
+  float sr = sin(uShot.w);
+  q = vec2(cr * q.x + sr * q.y, cr * q.y - sr * q.x);
   float ca = 0.6 + t * 0.045;
   vec3 ro = vec3(cos(ca) * 19.0, 1.6 + sin(t * 0.07) * 0.5, sin(ca) * 19.0);
-  vec3 rd = normalize(lookAt(ro, vec3(0.0)) * vec3(uv, 1.7));
+  vec3 rd = normalize(lookAt(ro, vec3(0.0)) * vec3(q, uShot.z));
   vec3 pos = ro;
   vec3 vel = rd;
   vec3 hv = cross(pos, vel);
@@ -92,8 +108,10 @@ void main() {
     }
     pos = np;
   }
-  if (trans > 0.0) col += trans * stars(normalize(vel));
-  col = 1.0 - exp(-col * 1.15);
+  if (trans > 0.0) col += trans * stars(normalize(vel), t);
+  // slow fade up from black: exposure ramps, so the disk shows first and stars last
+  float fade = smoothstep(0.0, 4.5, t);
+  col = 1.0 - exp(-col * 1.15 * fade * fade);
   gl_FragColor = vec4(pow(col, vec3(0.92)), 1.0);
 }`
 
@@ -152,12 +170,14 @@ export default function L7Gargantua() {
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0)
     const uRes = gl.getUniformLocation(prog, 'uRes')
     const uTime = gl.getUniformLocation(prog, 'uTime')
+    const uShot = gl.getUniformLocation(prog, 'uShot')
     // fewer pixels on small screens: the ray march is the expensive part
     const scale = Math.min(innerWidth, innerHeight) < 600 ? 0.35 : 0.5
     const resize = () => {
       cv.width = Math.max(1, Math.round(cv.clientWidth * scale))
       cv.height = Math.max(1, Math.round(cv.clientHeight * scale))
       gl.viewport(0, 0, cv.width, cv.height)
+      gl.uniform4f(uShot, ...shotUniforms(cv.clientWidth || 1, cv.clientHeight || 1))
     }
     resize()
     addEventListener('resize', resize)

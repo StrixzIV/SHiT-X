@@ -11,4 +11,8 @@ import L7Gargantua from './L7Gargantua.jsx'
 export const SCENES = [L0Underwater, L1XpBsod, L2Heaven, L3Thunder, L4Skeleton, L5Battle, L6Molam, L7Gargantua]
 
 // How long each scene plays (ms at 1×) before the result sheet slides up over it.
-export const SCENE_MS = [5000, 5000, 5500, 6500, 4500, 12500, 9500, 9000]
+export const SCENE_MS = [5000, 5000, 5500, 6500, 4500, 12500, 9500, 10500]
+
+// Levels whose result sheet the scene grabs instead of letting it dock (L7: it
+// orbits the black hole, see orbit.js).
+export const ORBITS = new Set([7])

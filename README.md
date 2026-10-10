@@ -20,6 +20,8 @@ Do not put electronics in real flood water.
 
 React + Vite + Tailwind, WebGL, WebAudio, and Web Serial/USB/HID. Details are in [ARCHITECTURE.md](ARCHITECTURE.md), and the probe firmware is in [hardware/ileak-probe](hardware/ileak-probe/ileak-probe.ino).
 
+Agent work logs and continuation notes are in [handoff/README.md](handoff/README.md).
+
 ```sh
 pnpm install
 pnpm dev          # http://localhost:5173

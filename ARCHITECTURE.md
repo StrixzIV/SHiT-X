@@ -102,8 +102,10 @@ total = chips × mult. The level (0–7) picks the result scene: thresholds 0, >
 ## Result scenes (`fx/CalcOverlay.jsx`, `fx/scenes/`)
 
 1. **Loading:** a black page with white motes drifting slowly around the centre (`fx/Particles.jsx`). On top, the Balatro-style tally plays (chips / +Mult / ×Mult / ×0, with sounds), then the total ticks up.
-2. **Hard cut** to the level's scene. Each scene opens its own sound session (`fx/audio.js`), which stops with the scene.
+2. **Hard cut** to the level's scene (L7 instead fades up slowly from black). Each scene opens its own sound session (`fx/audio.js`), which stops with the scene.
 3. **Result sheet** slides up over the still-running scene after `SCENE_MS[level]`.
+
+On **L7**, `fx/scenes/orbit.js` takes over after the slide-up: the black hole pulls the sheet into a perspective orbit. The lap is a Kepler ellipse with the hole at one focus, so the card drifts slowly through the open sky (top right; top centre on portrait screens) and whips round the hole, partly off-screen, for about a quarter of each 16 s lap. Drag and release to fling it; gravity brings it back around. Hover, tap the heading, or focus the card with the keyboard to slow and enlarge it for reading. On touch screens, the heading is the drag handle and the body scrolls normally. Dropping it into the shadow makes it disappear and return. Reduced motion keeps the sheet docked, and certificate printing removes the orbit transform and mask.
 
 | Lvl | Scene | Sound (synthesized, original) | Drop-in files (`public/fx/`) |
 |---|---|---|---|
@@ -114,7 +116,7 @@ total = chips × mult. The level (0–7) picks the result scene: thresholds 0, >
 | 4 | The purple electrocuted skeleton photo, shaking, X-ray flicker, purple arcs | electric buzz + synthesized "FAHHH" | `l4-fahh.mp3`, `fahh.mp3` or `fahhhhhhhhhhhhhh.mp3`, played at the cut and ~2.6 s later (photo: `skeleton.png`) |
 | 5 | GBA-style wild battle: flash + stripe wipe, then PLUGCHU (original electric plug creature). You use THUNDER, it's not very effective, it absorbs 220 V, it uses THUNDER, you faint | encounter jingle, battle loop with drums, attack / HP-drain / faint effects, text blips | `l5-battle.mp3`, `l5-opponent.png` / `.jpg` / `.webp` (rename via `OPPONENT` in `L5Battle.jsx`) |
 | 6 | "ภัยพิบัติระดับหมอลำ": military command display: radar sweep, alarm title, warning stripes, radio log with the live voltage | radio static, squelch, roger beeps, Morse, distant siren; a Thai voice reads the log if the device has one | `l6-radio.mp3` |
-| 7 | Gargantua: WebGL ray-marched black hole, rays bent by the Schwarzschild photon equation (lensed disk, photon ring, Doppler-bright side), orbiting camera | heavy distorted drone: detuned saws through a resonant swept filter and overdrive, sub, whooshes, slow downward pitch bend | `l7-space.mp3` |
+| 7 | Gargantua: WebGL ray-marched black hole, rays bent by the Schwarzschild photon equation (lensed disk, photon ring, Doppler-bright side, lensed star field). A telephoto shot of the hole's top-right with a slight camera roll (`fx/scenes/gargantua.js`, shared with the orbit), fading up from black over ~4.5 s | heavy distorted drone: detuned saws through a resonant swept filter and overdrive, sub, whooshes, slow downward pitch bend | `l7-space.mp3` |
 
 **Drop-in files** are optional. Each scene tries its file first and falls back to its own synthesized sound or art when the file is missing. On Firebase a missing path returns `index.html`, which just fails to load. The app ships original art and music only. Nintendo / Pokémon assets, a real person's photo, or a meme clip are the team's own files to add.
 

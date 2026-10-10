@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Award, PhoneCall, Printer, RotateCcw } from 'lucide-react'
 import Particles from './Particles.jsx'
 import { CountUp, WavyText } from './juice.jsx'
-import { SCENES, SCENE_MS } from './scenes/index.js'
+import { ORBITS, SCENES, SCENE_MS } from './scenes/index.js'
+import { useOrbit } from './scenes/orbit.js'
 import { RESPONDERS } from '../../../game/responders.js'
 import { chipSound, multSound, tick, xmultSound, zeroSound } from './sfx.js'
 
@@ -24,7 +25,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const fmt = (n) => (n >= 1e6 ? n.toExponential(2) : (+n.toFixed(1)).toLocaleString('en-US'))
 
 // Loading (black, floating motes, the Balatro-style tally) → hard cut to the
-// level's scene → the result sheet slides up over it.
+// level's scene → the result sheet slides up over it (on L7 the black hole then
+// grabs it and keeps it in orbit).
 // `skip` (dev) cuts straight to the scene; `auto` (dev sequences) closes by itself.
 export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto = false, onClose }) {
   const { steps, total, level } = score
@@ -34,6 +36,9 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
   const [counting, setCounting] = useState(false)
   const [cert, setCert] = useState(null)
   const autoClose = useRef(null)
+  const sheet = useRef(null)
+  const orbits = ORBITS.has(level)
+  const note = useOrbit(sheet, phase === 'result' && orbits)
   useEffect(() => {
     autoClose.current = auto ? onClose : null
   })
@@ -111,11 +116,12 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
       )}
 
       {phase === 'result' && (
-        <div className="result">
+        <div ref={sheet} className={`result${orbits ? ' orbit' : ''}`} tabIndex={orbits ? 0 : undefined}>
           <div className="result-head">
             <b>{fmt(total)} V</b>
             <WavyText text={title} className="verdict" />
           </div>
+          {orbits && <small className="orbit-hint">ลากหัวการ์ดเพื่อเหวี่ยง · แตะเพื่ออ่าน</small>}
           <p className="result-sub">{sub}</p>
           <ol className="chain">
             {RESPONDERS.slice(0, level).map((r) => (
@@ -156,6 +162,7 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
           </div>
         </div>
       )}
+      {note && <p className="orbit-note" aria-live="polite">{note}</p>}
     </div>
   )
 }

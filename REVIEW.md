@@ -86,7 +86,7 @@ Order of the cards in the calculation:
 ## 4. Result scenes, verdicts and responders (`src/quality/high/fx/CalcOverlay.jsx`, `src/quality/high/fx/scenes/`, `src/game/responders.js`)
 
 - [ ] Loading: black page, white motes drifting slowly around the centre, the Balatro tally (cards + chips × mult + sounds), then the total ticks up
-- [ ] Then a hard cut (no transition) to the level's scene; the result sheet slides up over it later, with "<total> V" and the verdict at the top
+- [ ] Then a hard cut (no transition) to the level's scene (L7 fades up slowly from black instead); the result sheet slides up over it later, with "<total> V" and the verdict at the top
 - [ ] Closing the sheet ("ประเมินใหม่") stops the scene's sound
 - [ ] The speaker button in the header mutes the scene sound mid-scene
 
@@ -99,7 +99,7 @@ Order of the cards in the calculation:
 | [ ] | 4 | 30,000 | น้ำท่วมทั้งซอยมีไฟ | Purple skeleton photo shaking, X-ray flicker, arcs | buzz + "FAHHH" ×2 | กรมทหารช่าง |
 | [ ] | 5 | 100,000 | หายนะระดับชาติ | GBA flash + stripe wipe → battle vs PLUGCHU: your THUNDER → "ได้ผลไม่ค่อยดี..." → absorbs 220V → its THUNDER → 0/20 → หมดสภาพ | jingle, battle loop, attack / drain / faint effects | UN |
 | [ ] | 6 | 1e8 | ภัยพิบัติระดับหมอลำ | Military display: radar, flashing title, DEFCON หมอลำ 1, radio log with the live voltage | static, squelch, roger beeps, Morse, siren (+ Thai voice if available) | NASA + IAEA |
-| [ ] | 7 | 1e15 | จักรวาลถูกรีสตาร์ท | Gargantua: 3D lensed black hole, orbiting camera | distorted space drone, slow pitch bend | เบื้องบน (→ funeral chant) |
+| [ ] | 7 | 1e15 | จักรวาลถูกรีสตาร์ท | Slow fade from black to Gargantua's top-right, camera rolled a little: lensed disk arc, bright disk running off to the right, stars (streaked near the hole) | distorted space drone, slow pitch bend | เบื้องบน (→ funeral chant) |
 
 **Drop-in files (`public/fx/`, all optional; a missing file falls back to the built-in version):**
 
@@ -111,6 +111,16 @@ Order of the cards in the calculation:
 - [ ] `l5-opponent.png` / `.jpg` / `.webp` (plus the `OPPONENT` name in `L5Battle.jsx`)
 - [ ] `l6-radio.mp3`
 - [ ] `l7-space.mp3`
+
+**L7 result card in orbit** (DEV → L7 with "ข้ามการคำนวณ" for a fast preview):
+
+- [ ] The sheet slides up, shivers, then gets pulled down past the hole, swings round it (briefly off-screen) and comes back over the top, behind the shadow. Then it settles into a long lap: slow through the open sky at top right (top centre on a phone), a quick whip round the hole.
+- [ ] Mouse: hovering it slows it almost to a stop and enlarges it to read (subtitle: "⏳ ใกล้หลุมดำ เวลาเดินช้าลง…"); moving away lets it go
+- [ ] Drag and release: the card flies off with the throw and swings back into orbit, instead of stopping under the cursor
+- [ ] Drop it on the shadow (by its centre or by the point you're holding): it spirals in, stretches, vanishes, then comes back out with the Hawking-radiation subtitle
+- [ ] Phone: drag by the heading; tap the card to hold it up to read (tap again to let go); swipe the body to scroll it
+- [ ] The buttons and the "ติดต่อเบื้องบน" link still work while it moves; the certificate prints flat
+- [ ] With reduced motion on, the sheet just docks at the bottom as usual
 
 - [ ] On the result sheet, every responder below the current level is crossed out with "เกินอำนาจ ส่งเรื่องต่อ" (beyond their authority, passed on)
 - [ ] The certificate button and "ประเมินใหม่" (re-assess) both work
