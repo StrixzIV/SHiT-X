@@ -9,6 +9,7 @@ import { DEFAULT_KNOBS, DEFAULT_SKIPS } from '../devDefaults.js'
 const SKIPS = [
   ['gate', 'ข้ามหน้าข้อตกลง'],
   ['ios', 'ข้ามหน้าบล็อก iOS'],
+  ['geo', 'ข้ามหน้าบล็อกภูมิภาค'],
   ['appraisal', 'ข้ามแอนิเมชันประเมิน'],
   ['manual', 'ข้ามการบังคับชาร์จด้วยมือ'],
   ['calc', 'ข้ามการคำนวณ (ไปผลลัพธ์เลย)'],

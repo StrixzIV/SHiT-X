@@ -3,6 +3,7 @@ import PortalHeader from './components/PortalHeader.jsx'
 import AgreementGate from './components/AgreementGate.jsx'
 import BrowserNotice from './components/BrowserNotice.jsx'
 import IosBlock from './components/IosBlock.jsx'
+import AfricaBlock from './components/AfricaBlock.jsx'
 import DevPanel from './components/DevPanel.jsx'
 import FpsMeter from './components/FpsMeter.jsx'
 import { detectBrowser } from '../../appraisal/devices.js'
@@ -11,8 +12,21 @@ import { useProbes } from '../../probes/useProbes.js'
 import { setSound } from './fx/sfx.js'
 import { consumeBatteryReload, devFromUrl, setDevInUrl } from './session.js'
 import { DEFAULT_KNOBS, DEFAULT_SKIPS } from './devDefaults.js'
+import { AFRICA_COUNTRY_NAMES, isAfricaRegion } from '../../geo/africa.js'
+import { detectVisitorCountry } from '../../geo/detector.js'
 
 const IOS = detectBrowser().ios
+// Region block (feat/geo-blockade): test with ?country=XX or ?test_country=XX.
+const TEST_COUNTRY = (new URLSearchParams(location.search).get('country') || new URLSearchParams(location.search).get('test_country') || '').trim().toUpperCase()
+
+function initialGeo() {
+  if (TEST_COUNTRY) return { isAfrica: isAfricaRegion(TEST_COUNTRY), countryName: AFRICA_COUNTRY_NAMES[TEST_COUNTRY] || TEST_COUNTRY }
+  try {
+    const cached = JSON.parse(sessionStorage.getItem('ileak_geo_info') || 'null')
+    if (cached) return cached
+  } catch { /* storage blocked */ }
+  return { isAfrica: false, countryName: '' }
+}
 // Read once per page load (not in a state initializer: StrictMode would run it twice).
 const START_DEV = devFromUrl()
 const SKIP_GATE_ONCE = consumeBatteryReload()
@@ -33,10 +47,21 @@ export default function App({ quality, onQualityChange, onOpenQualityGate }) {
   // a battery re-check reload, which the user triggered after agreeing).
   const [agreed, setAgreed] = useState(SKIP_GATE_ONCE)
   const [sound, setSoundState] = useState(true)
+  const [geo, setGeo] = useState(initialGeo)
   // Probes live at the app root so open ports/streams survive overlays.
   const { cards, tap, refresh } = useProbes()
 
   useEffect(() => setSound(sound), [sound])
+  useEffect(() => {
+    if (TEST_COUNTRY) return
+    let active = true
+    detectVisitorCountry().then((info) => {
+      if (active && info) setGeo({ isAfrica: Boolean(info.isAfrica), countryName: info.countryName || info.country })
+    })
+    return () => {
+      active = false
+    }
+  }, [])
   useEffect(() => () => clearInterval(randomTimer.current), [])
 
   const toggleDev = (on) => {
@@ -70,8 +95,9 @@ export default function App({ quality, onQualityChange, onOpenQualityGate }) {
 
   // iOS can't report charging (or anything else we need): joke screen, no way through
   // except the dev skip.
-  const iosBlocked = IOS && !(dev && skips.ios)
-  const showGate = !iosBlocked && !agreed && !(dev && skips.gate)
+  const geoBlocked = geo.isAfrica && !(dev && skips.geo)
+  const iosBlocked = !geoBlocked && IOS && !(dev && skips.ios)
+  const showGate = !geoBlocked && !iosBlocked && !agreed && !(dev && skips.gate)
 
   return (
     <div className="app">
@@ -106,7 +132,9 @@ export default function App({ quality, onQualityChange, onOpenQualityGate }) {
         )}
       </PortalHeader>
 
-      {iosBlocked ? (
+      {geoBlocked ? (
+        <AfricaBlock country={geo.countryName} />
+      ) : iosBlocked ? (
         <IosBlock />
       ) : showGate ? (
         <AgreementGate onAccept={() => setAgreed(true)} dev={dev} />
@@ -122,7 +150,7 @@ export default function App({ quality, onQualityChange, onOpenQualityGate }) {
           onInfo={setInfo}
         />
       )}
-      {!iosBlocked && <BrowserNotice />}
+      {!geoBlocked && !iosBlocked && <BrowserNotice />}
       {dev && knobs.fps && <FpsMeter />}
     </div>
   )
