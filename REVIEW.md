@@ -85,21 +85,32 @@ Order of the cards in the calculation:
 
 ## 4. Result scenes, verdicts and responders (`src/quality/high/fx/CalcOverlay.jsx`, `src/quality/high/fx/scenes/`, `src/game/responders.js`)
 
-- [ ] Loading: black page, white motes drifting slowly around the centre, the Balatro tally (cards + chips × mult + sounds), then the total ticks up
-- [ ] Then a hard cut (no transition) to the level's scene (L7 fades up slowly from black instead); the result sheet slides up over it later, with "<total> V" and the verdict at the top
+- [ ] Loading: the PS2 boot screen from ft_blueprint's PS2 skin (blue fog drifting, six clear glass cubes tumbling that bend the fog and light trails behind them, red/green/violet/blue lights with hairline trails; low hum, glassy chimes; without WebGL2 the cubes are drawn dark glass with a sliding reflection), with the Balatro tally on top (cards + chips × mult + sounds), then the total ticks up; the tally stays readable
+- [ ] When the count finishes, it dives in faster and faster while rolling anticlockwise: cubes glint and rush past, the lights streak, and everything that moves leaves fading copies of itself (old-game frame stacking), a short flare. Then about a second in the void with only the smoke left, drifting closer and fading out (hum gone, a swell building) before the cut; the tally spins off anticlockwise with a blur; then the level's scene (L7 fades up slowly from black); the result sheet slides up over it later, with "<total> V" and the verdict at the top
+- [ ] PS1 / PS2 switch (top right): every load starts on PS2. PS2 = sharp-edged 448-line pixels with glow and faint interlace lines; PS1 = chunkier 240-line pixels with dithering and wobbly 3D. Flip it mid-scene: the look changes, the scene doesn't restart. L0, L1 and L5 look the same in both
 - [ ] Closing the sheet ("ประเมินใหม่") stops the scene's sound
-- [ ] The speaker button in the header mutes the scene sound mid-scene
+- [ ] Choosing mute with the taskbar speaker before opening a scene keeps its synth/file audio silent; covered taskbar controls remain disabled
 
 | ✓ | Lvl | Total ≥ | Verdict | Scene | Sound | Who responds |
 |---|---|---|---|---|---|---|
-| [ ] | 0 | 0 | ปลอดภัย | Famicom-style underwater stage that fills any screen (wide, ultrawide, portrait), phone diver with a cable tail, HUD shows the score, Claude's mascot in a hard hat swims across with a "BUILDING iLEAK..." bubble | chiptune waltz + bubbles + bloop | แม่ |
-| [ ] | 1 | 1 | ไฟรั่วเล็กน้อย | XP-style blue screen + sparks + a little smoke, memory dump % counts up | 8-bit crackle, hum | ช่างไฟปากซอย (→ ฿15 tape) |
-| [ ] | 2 | 2,000 | ไฟรั่วระดับหรู | Hard cut to the heaven stairway, slow zoom, rays, sparkles | angel choir + harp | การไฟฟ้า (กฟน. / กฟภ.) |
-| [ ] | 3 | 8,000 | ไฟรั่วระดับพรีเมียม | Storm and rain; the figure only shows during lightning | crack + rumble per strike | ปภ. |
-| [ ] | 4 | 30,000 | น้ำท่วมทั้งซอยมีไฟ | Purple skeleton photo shaking, X-ray flicker, arcs | buzz + "FAHHH" ×2 | กรมทหารช่าง |
-| [ ] | 5 | 100,000 | หายนะระดับชาติ | GBA flash + stripe wipe → battle vs PLUGCHU: your THUNDER → "ได้ผลไม่ค่อยดี..." → absorbs 220V → its THUNDER → 0/20 → หมดสภาพ | jingle, battle loop, attack / drain / faint effects | UN |
-| [ ] | 6 | 1e8 | ภัยพิบัติระดับหมอลำ | Military display: radar, flashing title, DEFCON หมอลำ 1, radio log with the live voltage | static, squelch, roger beeps, Morse, siren (+ Thai voice if available) | NASA + IAEA |
+| [ ] | 0 | 0 | ปลอดภัย | Black lives screen first (HUD, WORLD 0-0, Claude × 3, silent, ~2.4 s), then a Famicom-style underwater stage that fills any screen (wide, ultrawide, portrait). Claude in a hard hat is the hero, swimming with its USB-C cable trailing; a "BUILDING iLEAK..." bubble a second in and every 6 s; fish, coral, HUD with the score; no jellyfish | Reference-checked short opening of the original NES Mario Underwater theme: ascending intro once, held melody phrase repeats, two pulse voices and triangle bass + bubbles + bloop | แม่ |
+| [ ] | 1 | 1 | ไฟรั่วเล็กน้อย | XP-style blue screen + sparks + a little smoke, memory dump % counts up; a big spark burst every ~1.8 s, small fizzes between | only the 8-bit spark crackle on each big burst (no hum) | ช่างไฟปากซอย (→ ฿15 tape) |
+| [ ] | 2 | 2,000 | ไฟรั่วระดับหรู | Cut to white on the steps, then the camera tilts up a janky low-poly stairway through realistic-ish billboard clouds under low-poly god rays, to the meme crowd at the top (front row fully visible); they stay in view when the result slides up | angel choir + harp | การไฟฟ้า (กฟน. / กฟภ.) |
+| [ ] | 3 | 8,000 | ไฟรั่วระดับพรีเมียม | Low-poly flooded soi at night: shophouses, lit windows, power lines, rain; lightning lights it up and the giant figure at the end of the street only shows in the flashes | crack + rumble per strike | ปภ. |
+| [ ] | 4 | 30,000 | น้ำท่วมทั้งซอยมีไฟ | Low-poly person knee-deep in the flood, phone up, cable in the water, shaking: body → X-ray skeleton → white-out, purple arcs, jaw drops on each FAHHH | buzz + "FAHHH" ×2 (not louder than the rest; volume `FAHH_GAIN` in `L4Skeleton.jsx`) | กรมทหารช่าง |
+| [ ] | 5 | 100,000 | หายนะระดับชาติ | GBA flash + stripe wipe → battle vs PLUGCHU: your THUNDER → "ได้ผลไม่ค่อยดี..." → absorbs 220V → its THUNDER → 0/20 → หมดสภาพ | Reference-checked short opening of RSE's wild-battle theme at 196 BPM: chromatic intro once, horn phrase repeats, source bass/harmony/snare/timpani rhythm with synth voices; music fades at fainting, attack / drain / faint effects continue | UN |
+| [ ] | 6 | 1e8 | ภัยพิบัติระดับหมอลำ | Codec call (4:3, pillarboxed): "CALL" blinks, portraits open with static, 220.50 readout, typed Thai conversation (you ↔ ผู้การ) with the live voltage; mouths move with the speaker | Metal Gear-style trilling ring, connect chirp/static, quiet hiss after connection, soft text clicks, short squelch (+ Thai voice if available) | NASA + IAEA |
 | [ ] | 7 | 1e15 | จักรวาลถูกรีสตาร์ท | Slow fade from black to Gargantua's top-right, camera rolled a little: lensed disk arc, bright disk running off to the right, stars (streaked near the hole) | distorted space drone, slow pitch bend | เบื้องบน (→ funeral chant) |
+
+**L0 / L5 / L6 audio pass (2026-10-11):**
+
+- [x] L0/L5 opening excerpts now match independently decoded source pitches, onsets, durations and MIDI velocities (48 NES note events, 171 Hoenn events); source tempo and opening/loop boundaries are checked
+- [x] Scores/cues render through Chromium Web Audio with finite samples, headroom and silent tails; track grids line up, the opening runs once before the phrase loop, finite render scheduling cancels, and ended note nodes are released
+- [x] Updated browser pass: L0 stage music begins after the 2.4 s lives screen; L5's original chromatic opening continues into its horn phrase, the music bus fades at fainting, and a supplied track also stops at fainting; L6's cues remain
+- [x] Browser: DEV 1× / 3× / 10× works for these scenes, and closing stops all their audio sources and future note scheduling
+- [x] Updated browser pass: missing files fall back to synth; valid optional files play without duplicate synth music, replace L5's entire score including its intro, retain Codec cues and L5 attack effects, and pause on closing
+- [x] Shared master mute/resume silences and restores the playing synth
+- [ ] Listen on the target phone/desktop to judge musical resemblance and balance; check native Thai speech on a device with a Thai voice
 
 **Drop-in files (`public/fx/`, all optional; a missing file falls back to the built-in version):**
 
@@ -115,12 +126,15 @@ Order of the cards in the calculation:
 **L7 result card in orbit** (DEV → L7 with "ข้ามการคำนวณ" for a fast preview):
 
 - [ ] The sheet slides up, shivers, then gets pulled down past the hole, swings round it (briefly off-screen) and comes back over the top, behind the shadow. Then it settles into a long lap: slow through the open sky at top right (top centre on a phone), a quick whip round the hole.
-- [ ] Mouse: hovering it slows it almost to a stop and enlarges it to read (subtitle: "⏳ ใกล้หลุมดำ เวลาเดินช้าลง…"); moving away lets it go
-- [ ] Drag and release: the card flies off with the throw and swings back into orbit, instead of stopping under the cursor
+- [x] The base orbital card is 30% smaller. Mouse hover keeps it moving at normal orbit speed and never triggers reading enlargement or the time-dilation subtitle.
+- [x] The live card's text and edges bend near the hole, with a stronger swirl during swallowing. Its shader field follows the same hole framing; dragging tracks the painted grab point and clicking the bent certificate button works. The certificate prints without displacement.
+- [x] The black-hole shader itself lenses the result UI into curved rim images of its title bar, text and controls. These follow dragging, update for certificates/scrolling, disappear during the hidden wait and return when the card is spat out. Desktop/phone framebuffer comparisons show UI light outside the dark center; PS1/PS2 and reduced motion work.
+- [x] After 20 seconds without interaction, the hole swallows the card, keeps it invisible/inert for three seconds, then spits it back into orbit. The cycle repeats; interaction resets the deadline, and hover alone does not.
+- [x] Drag and release still tracks the grabbed point accurately, with no stuck held state or hover catch.
 - [ ] Drop it on the shadow (by its centre or by the point you're holding): it spirals in, stretches, vanishes, then comes back out with the Hawking-radiation subtitle
-- [ ] Phone: drag by the heading; tap the card to hold it up to read (tap again to let go); swipe the body to scroll it
+- [x] Clicking, phone taps and keyboard focus keep the card small and moving; none enable a sticky reading mode. Touch heading drag and release still work at 390 px. Body scrolling remains available.
 - [ ] The buttons and the "ติดต่อเบื้องบน" link still work while it moves; the certificate prints flat
-- [ ] With reduced motion on, the sheet just docks at the bottom as usual
+- [x] With reduced motion on, the sheet docks at the bottom without orbit or idle consumption.
 
 - [ ] On the result sheet, every responder below the current level is crossed out with "เกินอำนาจ ส่งเรื่องต่อ" (beyond their authority, passed on)
 - [ ] The certificate button and "ประเมินใหม่" (re-assess) both work
@@ -152,10 +166,13 @@ Order of the cards in the calculation:
 
 ### Agreement gate
 
-- [ ] Facts 1–5 unlock one at a time; each "อ่านแล้ว" button counts down 2–4 s
-- [ ] Then 3 safety checkboxes plus consent (none pre-ticked), with the real 1129 / 1130 warning
-- [ ] The enter button stays disabled until every box is ticked
-- [ ] The gate shows again on every page load (never remembered)
+- [x] Facts 1–5 appear as separate XP warning dialogs, one at a time. Each opens with `exclamation` and a fresh 2–4 s cooldown; OK stays gray/disabled until zero, and only clicking it advances.
+- [x] Close/Escape opens a separate XP “READ FIRST” error popup with `critical` sound and one of 12 varied Thai messages; the entire pool is used before repeating. No skip appears outside DEV.
+- [x] The underlying warning/consent is inert while the error is open. Error OK/close/Escape returns to the same step without advancing or clearing checked boxes.
+- [x] After the fifth OK, an iLeak dialog opens with `ding`, 3 safety checkboxes plus consent (none pre-ticked), and the real 1129 / 1130 warning.
+- [x] The large final OK stays disabled until every box is ticked; unticking any box disables it again.
+- [x] Warning/consent windows fit at 1280, 390 and 320 px; the final body scrolls while its large OK remains visible.
+- [x] The gate shows again on every normal page load (never remembered).
 
 ### Appraisal
 
@@ -273,3 +290,20 @@ Tiles:
 - [ ] เปิดข้อตกลง
 - [ ] รีเซ็ต restores the default skips and values
 - [ ] raw spec shows what the browser actually reported
+
+## XP desktop shell, sounds and gags
+
+- [ ] Luna blue windows, white panels, orange button hover border, green controls and original sky/hills background appear at desktop and 390 px widths without horizontal overflow.
+- [ ] Tahoma/Trebuchet and Thai fallback fonts render ่ ้ ๊ ๋ clearly, including in wrapped titles and buttons.
+- [ ] Header contains the brand, PS1/PS2 switch and DEV controls; `--header-h` follows its size. DEV remains above agreement and game overlays.
+- [ ] Bottom taskbar reserves space in the page; Start menu fits on phones, closes with Escape/outside click, and exposes quality selection, quality-screen opener, login and helper restoration.
+- [ ] Taskbar mute uses the same master gain as the scenes; clock displays local time.
+- [x] Each agreement warning plays `exclamation`, with gray OK until its cooldown reaches zero; the final consent window plays `ding`. Close/Escape cannot skip warnings or consent, and every normal reload starts again at warning 1.
+- [ ] iOS remains hard-blocked and the region block still works, with the `critical` cue.
+- [ ] Covered taskbar/helper controls cannot receive keyboard focus during the agreement or calculation overlay.
+- [ ] “ปิดเครื่อง…” opens a restart dialog; cancel/Escape keeps the page intact, and only confirming restart plays `shutdown` and reloads.
+- [ ] Connected/disconnected device cards trigger the correct sound and named hardware balloon; the balloon hides after five seconds or on close, and does not obscure the Start menu.
+- [ ] น้องปลั๊ก gives entry/appraisal/no-peripheral/before-proceed tips, scrolls to controls on “ใช่”, collapses on “ไม่ต้อง”, remembers “ไม่ต้องแสดงอีก” for the session, and can be restored from Start.
+- [ ] Certificate sticker has a guilloche pattern, hologram, tier edition and stable `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX` fake key. Printing shows only the certificate, including from an orbiting L7 card.
+- [ ] Calculation uses the original SVG hourglass cursor; reduced motion keeps the UI and L7 readable.
+- [ ] Each event in `public/sounds/README.md` loads `.mp3` / `.wav` / `.ogg` in order; missing or broken files fall back to synthesis, respect mute and tolerate browser autoplay restrictions.

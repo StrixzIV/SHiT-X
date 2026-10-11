@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#2573cd"/><stop offset=".65" stop-color="#85c9fa"/><stop offset="1" stop-color="#d8efff"/></linearGradient>
+    <linearGradient id="far" x2=".3" y2="1"><stop stop-color="#80ce46"/><stop offset="1" stop-color="#349128"/></linearGradient>
+    <linearGradient id="near" x2=".1" y2="1"><stop stop-color="#9ce953"/><stop offset=".45" stop-color="#57b735"/><stop offset="1" stop-color="#247e28"/></linearGradient>
+    <radialGradient id="light"><stop stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="12"/></filter>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h1600v1000H0z"/>
+  <ellipse cx="1240" cy="180" rx="450" ry="400" fill="url(#light)"/>
+  <g fill="#fff" opacity=".65" filter="url(#soft)">
+    <path d="M-90 235q80-60 135-30 60-100 130-45 95-50 120 28 100-10 147 70H-90z"/>
+    <path d="M965 240q75-56 125-31 80-95 140-38 80-14 111 53 112 0 172 66H965z"/>
+    <path d="M455 100q75-60 110-20 52-40 92 8 70-8 111 47H455z"/>
+  </g>
+  <path d="M0 745C310 818 447 657 725 687c282 30 432 1 875-99v412H0z" fill="url(#far)"/>
+  <path d="M0 738c194-92 395-87 617-12 391 134 629 36 983 86v188H0z" fill="url(#near)"/>
+  <path d="M0 748c194-94 393-86 617-10" stroke="#c3f778" stroke-opacity=".45" stroke-width="4" fill="none"/>
+</svg>

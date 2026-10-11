@@ -5,7 +5,7 @@ import { setDevInUrl } from '../high/session.js'
 
 const QUALITY_INFO = {
   high: {
-    title: 'High (Prestige)',
+    title: 'High',
     subtitle: 'เต็มระบบ WebGL, เอฟเฟกต์ไฟกระพริบ, Balatro, และเสียงสมจริง',
     icon: Sparkles,
     badge: 'แนะนำ',

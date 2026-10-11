@@ -6,7 +6,7 @@ const HAS_POINTER = typeof window !== 'undefined' && 'PointerEvent' in window
 
 // Press and hold to commit. Builds anticipation: it shakes harder and the
 // pitch climbs the longer you hold; letting go drains it.
-export default function HoldButton({ ms = 1500, onFire, children, disabled }) {
+export default function HoldButton({ ms = 1500, onFire, onPrepare, children, disabled }) {
   const [p, setP] = useState(0)
   const st = useRef({ raf: 0, holding: false, p: 0, last: 0, tick: 0 })
 
@@ -33,6 +33,7 @@ export default function HoldButton({ ms = 1500, onFire, children, disabled }) {
   const down = (e) => {
     if (disabled || (e.type === 'keydown' && (e.repeat || (e.key !== 'Enter' && e.key !== ' ')))) return
     e.preventDefault()
+    onPrepare?.()
     st.current.holding = true
     cancelAnimationFrame(st.current.raf)
     st.current.raf = requestAnimationFrame(loop)

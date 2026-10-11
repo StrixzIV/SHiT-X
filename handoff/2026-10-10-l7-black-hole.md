@@ -8,6 +8,8 @@ The user asked: “make change to the black hole screen to pull the result that 
 
 The interaction is implemented and verified, and was committed and pushed on 2026-10-10 together with the cinematic-shot change (commit "L7: result card orbits the black hole; cinematic top-right shot").
 
+**Later user-directed change, 2026-10-11:** hover, tap/click and keyboard-focus reading assistance were removed, the orbiting card made 30% smaller, and a 20-second idle swallow / three-second hidden wait / spit-out cycle added. See [the current L7 follow-up](2026-10-11-l7-annoying-orbit.md). The reading controls and temporary regression script below describe the earlier committed version.
+
 ## Project context
 
 - React/Vite app. The full implementation lives in `src/quality/high/`.

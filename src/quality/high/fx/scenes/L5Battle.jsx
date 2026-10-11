@@ -2,9 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useCanvas } from './useCanvas.js'
 import { loadImage, noise, playFile, sequence, session, tone } from '../audio.js'
 import { beep } from '../sfx.js'
+import { HOENN_BATTLE_SCORE } from './sceneAudio.js'
 
-// Level 5 — a GBA-style wild battle. Original creature + music; to use your own,
-// drop public/fx/l5-opponent.png (sprite) and/or l5-battle.mp3, and rename here.
+// Level 5 — a GBA-style wild battle. Original creature + a short opening of
+// Ruby/Sapphire/Emerald's wild-battle theme, played with browser synth voices.
+// To use your own, drop public/fx/l5-opponent.png (sprite) and/or l5-battle.mp3,
+// and rename the opponent here.
 const OPPONENT = 'PLUGCHU'
 const GBA = [240, 160]
 
@@ -140,10 +143,15 @@ export default function L5Battle({ speed = 1 }) {
       st.current.tw[key] = { from: st.current.v[key], to, start: now, dur: ms / speed }
     }
     const s = session(0.85)
-    // encounter jingle + wipe
+    const music = s ? session(0.75) : null
+    // The actual battle opening spans the flash/wipe and continues into battle.
+    // A supplied track already includes its intro, so it replaces the whole score.
+    if (music) playFile(music, 'l5-battle.mp3', { loop: true, gain: 0.7 }).then((ok) => {
+      if (ok || !music.alive) return
+      sequence(music, { ...HOENN_BATTLE_SCORE, bpm: HOENN_BATTLE_SCORE.bpm * speed })
+    })
     if (s) {
-      ;[88, 84, 81, 76, 72].forEach((m, i) => tone(s, { freq: 440 * 2 ** ((m - 69) / 12), type: 'square', at: i * 0.07, dur: 0.09, gain: 0.05 }))
-      noise(s, { at: 0.6, dur: 0.6, gain: 0.15, type: 'bandpass', freq: 600, sweepTo: 5000 })
+      noise(s, { at: 0.6 / speed, dur: 0.6 / speed, gain: 0.1, type: 'bandpass', freq: 600, sweepTo: 5000 })
     }
     const timers = [
       at(600, () => setPhase('bars')),
@@ -151,24 +159,6 @@ export default function L5Battle({ speed = 1 }) {
         setPhase('battle')
         tw('opp', 0, 600)
         tw('plr', 0, 600)
-        if (!s) return
-        playFile(s, 'l5-battle.mp3', { loop: true, gain: 0.7 }).then((ok) => {
-          if (ok || !s.alive) return
-          const lead = [76, null, 74, null, 72, null, 71, null, 72, null, 74, null, 76, null, 79, null, 81, null, 79, null, 76, null, 74, null, 76, null, 72, null, 71, null, 69, null]
-          const bass = [45, null, 57, null, 45, null, 57, null, 43, null, 55, null, 43, null, 55, null, 41, null, 53, null, 41, null, 53, null, 40, null, 52, null, 44, null, 56, null]
-          const hats = Array.from({ length: 32 }, (_, i) => (i % 2 ? null : 7000))
-          const snare = Array.from({ length: 32 }, (_, i) => (i % 8 === 4 ? [1800, 1] : null))
-          sequence(s, {
-            bpm: 150,
-            stepsPerBeat: 4,
-            tracks: [
-              { notes: lead, type: 'square', gain: 0.035, len: 1.6 },
-              { notes: bass, type: 'triangle', gain: 0.12, len: 1.7 },
-              { notes: hats, type: 'noise', gain: 0.02, len: 0.3 },
-              { notes: snare, type: 'noise', gain: 0.07 },
-            ],
-          })
-        })
       }),
       ...SCRIPT.map(([ms, text]) => at(ms, () => {
         setMsg(text)
@@ -202,12 +192,14 @@ export default function L5Battle({ speed = 1 }) {
       }),
       at(11800, () => {
         tw('faint', 1, 700)
-        if (s) tone(s, { freq: 620, slideTo: 60, type: 'square', dur: 0.9, gain: 0.08 })
+        music?.stop()
+        if (s) tone(s, { freq: 620, slideTo: 60, type: 'pulse', duty: 0.25, dur: 0.7 / speed, gain: 0.065 })
       }),
     ]
     return () => {
       timers.forEach(clearTimeout)
       s?.stop()
+      music?.stop()
     }
   }, [speed])
 

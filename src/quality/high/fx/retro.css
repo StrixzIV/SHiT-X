@@ -1,0 +1,12 @@
+/* Result-scene styles owned by fx/ (index.css belongs to the XP UI work). */
+
+/* low-res scene canvases, upscaled with hard pixels */
+.scene-canvas.retro { image-rendering: crisp-edges; image-rendering: pixelated; }
+
+/* calculation screen: the tally spins off anticlockwise as the boot screen dives in */
+.calc.zooming .calc-stage { animation: tally-zoom .9s cubic-bezier(.5, 0, .9, .4) forwards; }
+@keyframes tally-zoom { to { transform: rotate(-35deg) scale(2.8); opacity: 0; filter: blur(4px); } }
+
+/* L6: the 4:3 Codec screen, pillarboxed */
+.scene-codec { background: #000; }
+.scene-canvas.codec { object-fit: contain; }

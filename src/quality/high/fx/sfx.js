@@ -18,7 +18,7 @@ function audio() {
     master.gain.value = enabled ? 1 : 0
     master.connect(ctx.destination)
   }
-  if (ctx.state === 'suspended') ctx.resume()
+  if (ctx.state === 'suspended') ctx.resume().catch(() => {})
   return ctx
 }
 

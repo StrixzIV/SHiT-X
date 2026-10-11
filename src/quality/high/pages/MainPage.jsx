@@ -2,6 +2,7 @@ import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'r
 import Appraisal from '../components/Appraisal.jsx'
 import Peripherals from '../components/Peripherals.jsx'
 import HoldButton from '../components/HoldButton.jsx'
+import PlugAssistant from '../components/PlugAssistant.jsx'
 import CalcOverlay from '../fx/CalcOverlay.jsx'
 import { estimateWatts, readSpecs, specBonus, tierFor } from '../../../appraisal/specs.js'
 import { computeScore } from '../../../game/score.js'
@@ -13,7 +14,7 @@ const LEVEL_TARGET = [0, 500, 3000, 12000, 50000, 300000, 5e9, 1e20]
 
 // `knobs` and `skips` come from the DEV panel and only apply while `dev` is on.
 // `apiRef` exposes fire / sequence / stop / replay to that panel.
-export default function MainPage({ cards, tap, refresh, dev, skips, knobs, apiRef, onInfo }) {
+export default function MainPage({ cards, tap, refresh, dev, skips, knobs, apiRef, onInfo, onOverlayChange }) {
   const [specs, setSpecs] = useState(null)
   const [override, setOverride] = useState(null)
   // Manual power answer: null = not answered, true = "charging" (manual charge), false = "not plugged".
@@ -25,6 +26,10 @@ export default function MainPage({ cards, tap, refresh, dev, skips, knobs, apiRe
   const [queue, setQueue] = useState([]) // dev stress test: levels (or 'real') to fire one after another
   const [instant, setInstant] = useState(dev && skips.appraisal)
   const [replay, setReplay] = useState(0)
+  useEffect(() => {
+    onOverlayChange?.(!!run)
+    return () => onOverlayChange?.(false)
+  }, [run, onOverlayChange])
 
   useEffect(() => {
     // a beat of suspense before the appraisal starts typing
@@ -167,12 +172,13 @@ export default function MainPage({ cards, tap, refresh, dev, skips, knobs, apiRe
                 ⚡ ไปชาร์จด้วยมือก่อน (ขั้นที่ 1) ↑
               </button>
             ) : (
-              <HoldButton ms={dev && skips.hold ? 300 : 1500} onFire={() => fire(null)}>กดค้างเพื่อจุ่มสายลงน้ำ</HoldButton>
+              <HoldButton ms={dev && skips.hold ? 300 : 1500} onPrepare={() => window.dispatchEvent(new CustomEvent('ileak:helper-prepare'))} onFire={() => fire(null)}>กดค้างเพื่อจุ่มสายลงน้ำ</HoldButton>
             )}
           </section>
         </>
       )}
 
+      <PlugAssistant stamped={stamped} connected={peripherals.some((card) => card.live)} covered={!!run} />
       {run && (
         <CalcOverlay
           key={run.id}

@@ -6,6 +6,8 @@ import IosBlock from './components/IosBlock.jsx'
 import AfricaBlock from './components/AfricaBlock.jsx'
 import DevPanel from './components/DevPanel.jsx'
 import FpsMeter from './components/FpsMeter.jsx'
+import Taskbar from './components/Taskbar.jsx'
+import { schemeSound } from './sound/scheme.js'
 import { detectBrowser } from '../../appraisal/devices.js'
 import MainPage from './pages/MainPage.jsx'
 import { useProbes } from '../../probes/useProbes.js'
@@ -47,6 +49,7 @@ export default function App({ quality, onQualityChange, onOpenQualityGate }) {
   // a battery re-check reload, which the user triggered after agreeing).
   const [agreed, setAgreed] = useState(SKIP_GATE_ONCE)
   const [sound, setSoundState] = useState(true)
+  const [overlay, setOverlay] = useState(false)
   const [geo, setGeo] = useState(initialGeo)
   // Probes live at the app root so open ports/streams survive overlays.
   const { cards, tap, refresh } = useProbes()
@@ -98,19 +101,21 @@ export default function App({ quality, onQualityChange, onOpenQualityGate }) {
   const geoBlocked = geo.isAfrica && !(dev && skips.geo)
   const iosBlocked = !geoBlocked && IOS && !(dev && skips.ios)
   const showGate = !geoBlocked && !iosBlocked && !agreed && !(dev && skips.gate)
+  const desktopReady = !geoBlocked && !iosBlocked && !showGate
+  useEffect(() => {
+    if (desktopReady) return schemeSound('startup')
+  }, [desktopReady])
+  useEffect(() => {
+    if (geoBlocked || iosBlocked) return schemeSound('critical')
+  }, [geoBlocked, iosBlocked])
 
   return (
     <div className="app">
       <PortalHeader
-        sound={sound}
-        onSound={() => setSoundState(!sound)}
         dev={dev}
         onDev={toggleDev}
         panel={panel}
         onPanel={() => setPanel(!panel)}
-        quality={quality}
-        onQualityChange={onQualityChange}
-        onOpenQualityGate={onOpenQualityGate}
       >
         {dev && panel && (
           <DevPanel
@@ -148,8 +153,20 @@ export default function App({ quality, onQualityChange, onOpenQualityGate }) {
           knobs={knobs}
           apiRef={main}
           onInfo={setInfo}
+          onOverlayChange={setOverlay}
         />
       )}
+      <Taskbar
+        key={showGate || overlay ? 'covered' : 'desktop'}
+        sound={sound}
+        onSound={() => setSoundState((value) => !value)}
+        quality={quality}
+        onQualityChange={onQualityChange}
+        onOpenQualityGate={onOpenQualityGate}
+        cards={cards}
+        active={desktopReady}
+        covered={showGate || overlay}
+      />
       {!geoBlocked && !iosBlocked && <BrowserNotice />}
       {dev && knobs.fps && <FpsMeter />}
     </div>

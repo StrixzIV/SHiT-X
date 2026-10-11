@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { Award, PhoneCall, Printer, RotateCcw } from 'lucide-react'
-import Particles from './Particles.jsx'
+import { Award, PhoneCall, RotateCcw } from 'lucide-react'
+import Certificate from './Certificate.jsx'
 import { CountUp, WavyText } from './juice.jsx'
 import { ORBITS, SCENES, SCENE_MS } from './scenes/index.js'
+import Boot, { ZOOM_S } from './scenes/Boot.jsx'
 import { useOrbit } from './scenes/orbit.js'
 import { RESPONDERS } from '../../../game/responders.js'
 import { chipSound, multSound, tick, xmultSound, zeroSound } from './sfx.js'
+import './retro.css'
 
 const VERDICT = [
   ['ปลอดภัย', 'ไม่พบพลังงานใดๆ ท่านปลอดภัย (และเรียบง่ายมาก)'],
@@ -24,9 +26,10 @@ const SOUND = { chips: chipSound, mult: multSound, xmult: xmultSound, zero: zero
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const fmt = (n) => (n >= 1e6 ? n.toExponential(2) : (+n.toFixed(1)).toLocaleString('en-US'))
 
-// Loading (black, floating motes, the Balatro-style tally) → hard cut to the
-// level's scene → the result sheet slides up over it (on L7 the black hole then
-// grabs it and keeps it in orbit).
+// Loading (PS2-boot-style towers with the Balatro-style tally on top) → the
+// camera dives into the towers and fades to black → the level's scene → the
+// result sheet slides up over it (on L7 the black hole then grabs it and keeps
+// it in orbit).
 // `skip` (dev) cuts straight to the scene; `auto` (dev sequences) closes by itself.
 export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto = false, onClose }) {
   const { steps, total, level } = score
@@ -34,6 +37,7 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
   const [active, setActive] = useState(-1)
   const [tally, setTally] = useState({ chips: 0, mult: 1 })
   const [counting, setCounting] = useState(false)
+  const [zoom, setZoom] = useState(false)
   const [cert, setCert] = useState(null)
   const autoClose = useRef(null)
   const sheet = useRef(null)
@@ -64,6 +68,9 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
         await wait(1600)
         clearInterval(ticker)
         if (dead) return
+        setZoom(true)
+        await wait(ZOOM_S * 1000)
+        if (dead) return
         setPhase('scene')
       }
       await wait(skip ? 1200 : SCENE_MS[level])
@@ -84,10 +91,10 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
   const [title, sub] = VERDICT[level]
 
   return (
-    <div className={`calc phase-${phase}`} role="dialog" aria-modal="true" aria-label="ผลการคำนวณ">
+    <div className={`calc phase-${phase}${zoom && phase === 'loading' ? ' zooming' : ''}`} role="dialog" aria-modal="true" aria-label="ผลการคำนวณ">
       {phase === 'loading' ? (
         <>
-          <Particles />
+          <Boot zoom={zoom} speed={speed} />
           <div className="calc-stage">
             <div className="score-cards">
               {steps.map((s, i) => (
@@ -112,7 +119,7 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
           </div>
         </>
       ) : (
-        <Scene total={total} speed={speed} tier={tier} />
+        <Scene total={total} speed={speed} tier={tier} uiRef={orbits ? sheet : undefined} />
       )}
 
       {phase === 'result' && (
@@ -121,7 +128,7 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
             <b>{fmt(total)} V</b>
             <WavyText text={title} className="verdict" />
           </div>
-          {orbits && <small className="orbit-hint">ลากหัวการ์ดเพื่อเหวี่ยง · แตะเพื่ออ่าน</small>}
+          {orbits && <small className="orbit-hint">ลากหัวการ์ดเพื่อเหวี่ยง · ปล่อยไว้เดี๋ยวโดนกิน</small>}
           <p className="result-sub">{sub}</p>
           <ol className="chain">
             {RESPONDERS.slice(0, level).map((r) => (
@@ -142,16 +149,7 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
               )}
             </div>
           </div>
-          {cert && (
-            <div className="cert">
-              <div className="cert-id">CERTIFICATE ID: {cert.id}</div>
-              <h3>หนังสือรับรองระดับชั้นทางพลังงาน</h3>
-              <p>ระดับ <b>{tier.id}</b> · {tier.title} · {cert.date}</p>
-              <p>ผลการตรวจวัด: <b>{fmt(total)} V</b> ({title})</p>
-              <p className="cert-fine">ใช้เพื่อความบันเทิงใน The Stupid Hackathon Thailand เท่านั้น อวดได้ แต่เคลมประกันไม่ได้</p>
-              <button type="button" className="btn-line" onClick={() => window.print()}><Printer size={16} /> พิมพ์</button>
-            </div>
-          )}
+          {cert && <Certificate cert={cert} tier={tier} volts={fmt(total)} verdict={title} />}
           <div className="result-foot">
             {!cert && (
               <button type="button" className="btn-line" onClick={() => setCert({ id: `ILEAK-${tier.id}-${Math.floor(1000 + Math.random() * 9000)}`, date: new Date().toLocaleDateString('th-TH') })}>

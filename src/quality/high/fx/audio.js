@@ -1,6 +1,6 @@
-// Sound toolkit for the result scenes. Each scene opens one session; everything
-// it plays routes through the session's gain, so closing the scene fades it all out.
-// All music here is original and synthesized. A scene may also try a drop-in file
+// Sound toolkit for the result scenes. Scene audio routes through session gains,
+// so closing the scene fades it all out; separate sessions can fade music and FX.
+// Music is synthesized from score data. A scene may also try a drop-in file
 // from public/fx/ first (see ARCHITECTURE.md "Result scenes").
 import { getAudio } from './sfx.js'
 
@@ -46,10 +46,19 @@ export function session(volume = 0.9) {
     every(fn, ms) {
       const t = setInterval(() => alive && fn(), ms)
       timers.add(t)
+      return t
+    },
+    cancel(t) {
+      clearTimeout(t)
+      clearInterval(t)
+      timers.delete(t)
     },
     keep(node) {
       nodes.add(node)
       return node
+    },
+    release(node) {
+      nodes.delete(node)
     },
     media(el) {
       media.add(el)
@@ -76,21 +85,60 @@ export function session(volume = 0.9) {
   return s
 }
 
-// One oscillator note with a simple envelope.
-export function tone(s, { freq, type = 'square', at = 0, dur = 0.2, gain = 0.1, slideTo, attack = 0.005, dest, detune = 0 }) {
+const waves = new WeakMap()
+function instrument(ctx, type, duty) {
+  let cache = waves.get(ctx)
+  if (!cache) { cache = new Map(); waves.set(ctx, cache) }
+  const key = type === 'pulse' ? `pulse:${duty}` : type
+  if (cache.has(key)) return cache.get(key)
+  const real = new Float32Array(33)
+  const imag = new Float32Array(33)
+  for (let n = 1; n < real.length; n++) {
+    if (type === 'pulse') {
+      real[n] = 2 * Math.sin(2 * Math.PI * n * duty) / (Math.PI * n)
+      imag[n] = 2 * (1 - Math.cos(2 * Math.PI * n * duty)) / (Math.PI * n)
+    } else {
+      // Bright, rounded upper harmonics: the brassy GBA battle lead.
+      imag[n] = Math.exp(-n * 0.16) / n ** 0.65
+    }
+  }
+  const wave = ctx.createPeriodicWave(real, imag)
+  cache.set(key, wave)
+  return wave
+}
+
+// One oscillator note. `hold` sustains a fraction of its duration before decay;
+// pulse duty and a harmonic brass voice give the game scores distinct instruments.
+export function tone(s, { freq, type = 'square', duty = 0.25, hold = 0, cutoff, at = 0, dur = 0.2, gain = 0.1, slideTo, attack = 0.005, dest, detune = 0 }) {
   if (!s?.alive) return
   const { ctx } = s
   const t = ctx.currentTime + at
   const o = ctx.createOscillator()
   const g = ctx.createGain()
-  o.type = type
+  if (type === 'pulse' || type === 'brass') o.setPeriodicWave(instrument(ctx, type, duty))
+  else o.type = type
   o.detune.value = detune
   o.frequency.setValueAtTime(freq, t)
   if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur)
   g.gain.setValueAtTime(0.0001, t)
-  g.gain.exponentialRampToValueAtTime(gain, t + attack)
+  const rise = Math.min(attack, dur * 0.3)
+  g.gain.exponentialRampToValueAtTime(gain, t + rise)
+  if (hold > 0) g.gain.setValueAtTime(gain, t + Math.max(rise, dur * Math.min(hold, 0.95)))
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
-  o.connect(g).connect(dest ?? s.out)
+  let filter
+  if (cutoff) {
+    filter = ctx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.value = cutoff
+    o.connect(filter).connect(g)
+  } else o.connect(g)
+  g.connect(dest ?? s.out)
+  o.onended = () => {
+    s.release?.(o)
+    o.disconnect()
+    g.disconnect()
+    filter?.disconnect()
+  }
   o.start(t)
   o.stop(t + dur + 0.05)
   s.keep(o)
@@ -117,11 +165,17 @@ export function noise(s, { at = 0, dur = 0.3, gain = 0.2, type = 'lowpass', freq
   src.start(t)
   if (!loop) src.stop(t + dur + 0.05)
   s.keep(src)
+  src.onended = () => {
+    s.release?.(src)
+    src.disconnect()
+    f.disconnect()
+    g.disconnect()
+  }
   return { src, filter: f, gain: g }
 }
 
-// Generated impulse response: cheap, asset-free reverb.
-export function reverb(s, seconds = 3, decay = 2.5, wet = 0.6) {
+// Generated impulse response: cheap, asset-free reverb. Sends to `dest` (the session by default).
+export function reverb(s, seconds = 3, decay = 2.5, wet = 0.6, dest = s.out) {
   const { ctx } = s
   const len = Math.floor(ctx.sampleRate * seconds)
   const ir = ctx.createBuffer(2, len, ctx.sampleRate)
@@ -134,8 +188,8 @@ export function reverb(s, seconds = 3, decay = 2.5, wet = 0.6) {
   const input = ctx.createGain()
   const wetG = ctx.createGain()
   wetG.gain.value = wet
-  input.connect(conv).connect(wetG).connect(s.out)
-  input.connect(s.out)
+  input.connect(conv).connect(wetG).connect(dest)
+  input.connect(dest)
   return input
 }
 
@@ -196,33 +250,53 @@ export function voice(s, { freq, at = 0, dur = 2, gain = 0.06, attack = 0.4, vib
   mix.connect(dest ?? s.out)
 }
 
-// Tiny looping step sequencer for chiptunes. `tracks` = [{ notes: [midi | [midi, steps] | null...],
-// type, gain, len (steps) }]; every track shares the step grid. type 'noise' uses the note as a
-// highpass cutoff in Hz (drums).
-export function sequence(s, { bpm, stepsPerBeat = 2, tracks, loops = Infinity }) {
+// Looping step sequencer: notes are MIDI, [MIDI, steps, velocity], or null.
+// Noise notes specify a cutoff in Hz; kick notes specify their landing pitch.
+// Tracks can set duty, hold, attack, cutoff, detune and noiseFilter. `loopStart`
+// skips a one-time opening on subsequent passes through a score. Returns a
+// scheduling stop function; session.stop also fades notes already queued.
+export function sequence(s, { bpm, stepsPerBeat = 2, tracks, loops = Infinity, loopStart = 0 }) {
   if (!s?.alive) return
   const stepDur = 60 / bpm / stepsPerBeat
   const length = Math.max(...tracks.map((t) => t.notes.length))
   let step = 0
   let loop = 0
   let next = s.now + 0.05
+  let active = true
+  let timer
   const hz = (m) => 440 * 2 ** ((m - 69) / 12)
   const tick = () => {
+    if (!active || !s.alive) return
     while (next < s.now + 0.25) {
       for (const tr of tracks) {
         const n = tr.notes[step % tr.notes.length]
         if (n == null) continue
-        const [m, len] = Array.isArray(n) ? n : [n, tr.len ?? 0.9]
-        if (tr.type === 'noise') noise(s, { at: next - s.now, dur: stepDur * len, gain: tr.gain, type: 'highpass', freq: m })
-        else tone(s, { freq: hz(m), type: tr.type, at: next - s.now, dur: stepDur * len, gain: tr.gain })
+        const [m, len, velocity = 1] = Array.isArray(n) ? n : [n, tr.len ?? 0.9]
+        if (velocity <= 0) continue
+        const note = { at: next - s.now, dur: stepDur * len, gain: tr.gain * velocity, attack: tr.attack }
+        if (tr.type === 'noise') noise(s, { ...note, type: tr.noiseFilter ?? 'highpass', freq: m, q: tr.q, dest: tr.dest })
+        else if (tr.type === 'kick') tone(s, { ...note, type: 'sine', freq: hz(m) * 2.5, slideTo: hz(m), dest: tr.dest })
+        else tone(s, { ...note, freq: hz(m), type: tr.type, duty: tr.duty, hold: tr.hold, cutoff: tr.cutoff, detune: tr.detune, dest: tr.dest })
       }
       next += stepDur
       step++
-      if (step % length === 0 && ++loop >= loops) return
+      if (step >= length) {
+        if (++loop >= loops) {
+          active = false
+          if (timer !== undefined) s.cancel(timer)
+          return
+        }
+        // Play the opening once, then repeat only the selected phrase.
+        step = loopStart
+      }
     }
   }
   tick()
-  s.every(tick, 100)
+  if (active) timer = s.every(tick, 100)
+  return () => {
+    active = false
+    if (timer !== undefined) s.cancel(timer)
+  }
 }
 
 // Try drop-in audio files in order (a name or a list of names); resolve false if
