@@ -37,17 +37,17 @@ Run these on the deployment machine with Node 22.12 or newer (Node 22 recommende
 ```sh
 git pull --ff-only
 npm ci
-npm ci --prefix functions
 npm test
 npm run lint
-npm run build
 npx firebase-tools login
-npx firebase-tools deploy --project ileak-test --only functions:companion,hosting
+make deploy
 ```
 
-The `ileak-test` Firebase project needs the Blaze plan to run the companion function. The throwaway demo credentials are included in `functions/.env` at the user's request; Firebase loads them during function deployment. Deploy both the function and Hosting so `/api/companion/health`, `/api/companion/say`, and `/api/companion/tts` reach the backend. After deployment, `/api/companion/health` should return `{"llm":true,"tts":true}`. Open High quality and enable sound to check her voice; a browser gesture may be needed to start audio.
+`make deploy` runs `npm run build` and deploys only Hosting to `ileak-test`, using `.firebaserc`. This works on Firebase's free Spark plan without Cloud Functions, Cloud Build or Artifact Registry. The demo build embeds the explicitly approved throwaway DeepSeek and Paxa credentials from `functions/.env` and calls those providers directly from the browser. Root `.env.local` can override the demo defaults.
 
-`make deploy` installs the function dependencies, builds the app, and runs the same deployment using the default project in `.firebaserc`. To retain the optional server-side region gate, use `firebase.blaze.json` and deploy `functions,hosting` instead. The default config retains the browser's region gate.
+After deployment, open High quality, click the page to unlock audio, enable sound and poke น้องปลั๊ก. Her reply should come from DeepSeek and be spoken by Paxa. This build does not use `/api/companion`; provider failures fall back to prewritten dialogue. The browser's region gate remains active.
+
+If a project later enables Blaze, `make deploy-blaze` installs the function dependencies, runs `npm run build:backend` and deploys the companion API, server-side region gate and Hosting through `firebase.blaze.json`. That build keeps credentials in the backend. Local `npm run dev` also uses the existing proxy.
 
 ## 🕹️ Demo & Screenshots
 

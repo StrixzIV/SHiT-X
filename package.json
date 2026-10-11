@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && mkdir -p functions/dist && cp -f dist/index.html functions/dist/index.html",
+    "build": "vite build --mode demo",
+    "build:backend": "vite build && mkdir -p functions/dist && cp -f dist/index.html functions/dist/index.html",
     "serve:geo": "node functions/dev-server.js",
     "lint": "oxlint",
-    "test": "node --test functions/companion.test.js",
+    "test": "node --test functions/companion.test.js src/quality/high/companion/api.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

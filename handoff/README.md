@@ -4,7 +4,7 @@ Start here when resuming work. This directory records changes made while another
 
 ## Work log
 
-The pending 2026-10-11 work below was reviewed together and included in the integration commit. See [review fixes, verification and the friend's deployment steps](2026-10-11-integration-review.md). Older task notes retain their original status as historical records.
+The pending 2026-10-11 work below was reviewed together and included in the integration commit. See [review fixes and verification](2026-10-11-integration-review.md). The deployment steps are superseded by [the free-plan demo fix](2026-10-11-spark-demo.md). Older task notes retain their original status as historical records.
 
 | Date | Task | State when recorded |
 | --- | --- | --- |
@@ -26,6 +26,7 @@ The pending 2026-10-11 work below was reviewed together and included in the inte
 | 2026-10-11 | [Result-scene awareness and shouts from the black hole](2026-10-11-companion-surroundings.md) | Done; mocked policy, middleware, browser and speech checks passed, uncommitted |
 | 2026-10-11 | [Low and Medium quality trees implemented](2026-10-11-low-medium-trees.md) | Done; lint/build/browser checks passed, uncommitted |
 | 2026-10-11 | [Combined-agent review and Firebase companion demo API](2026-10-11-integration-review.md) | Reviewed and verified; included in this integration commit; deployment is on the friend's machine |
+| 2026-10-11 | [Free Firebase Hosting demo with direct DeepSeek and Paxa calls](2026-10-11-spark-demo.md) | Replaces the default Functions deployment after the Spark-plan failure; deployment is on the friend's machine |
 
 ## Adding notes
 

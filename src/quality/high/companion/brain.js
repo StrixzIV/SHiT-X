@@ -2,9 +2,10 @@ import { useSyncExternalStore } from 'react'
 import { beep, getAudio, soundOn } from '../fx/sfx.js'
 import { candidates, fallbackLine } from './lines.js'
 import { canReact, readSurroundings, surroundingsKey } from './surroundings.js'
+import { createCompanionApi } from './api.js'
 
 // น้องปลั๊ก's brain. Anything in the app calls `nudge(event, detail)`; she decides
-// whether it's worth a comment, asks DeepSeek through the Firebase/Vite API
+// whether it's worth a comment, asks DeepSeek through the demo client or proxy
 // or picks a prewritten line, and sends it MSN-style: one short message per
 // phrase, each read by Paxa, with a breath between (the TTS reads a whole line in
 // one unpaced run otherwise). What to show goes through a tiny store the frame
@@ -13,7 +14,7 @@ import { canReact, readSurroundings, surroundingsKey } from './surroundings.js'
 // Priority: 2 = always comment (queued behind the current line, newest wins),
 // 1 = comment unless she's mid-sentence, 0 = clicks and idling, only now and then.
 
-const API = '/api/companion'
+const api = createCompanionApi()
 const GAP = [7000, 1800, 0] // quiet time after a line before each priority may speak
 const CHANCE = [0.55, 1, 1]
 // How DeepSeek should treat the prewritten lines this time (a suggestion it may overrule).
@@ -44,14 +45,9 @@ const subscribe = (f) => {
 export const useCompanion = () => useSyncExternalStore(subscribe, () => state)
 export const face = (name) => `${import.meta.env.BASE_URL}companion/${name}.webp`
 
-// Static-only hosts may rewrite /api to index.html. Anything other than our JSON
-// counts as "none", preserving offline/prewritten behavior.
-let backend = null
-const probe = () =>
-  (backend ??= fetch(`${API}/health`, { signal: AbortSignal.timeout?.(3000) })
-    .then((r) => (r.ok && r.headers.get('content-type')?.includes('json') ? r.json() : {}))
-    .then((h) => ({ llm: !!h.llm, tts: !!h.tts }))
-    .catch(() => ({ llm: false, tts: false })))
+// The demo uses its configured providers; other builds probe the shared proxy.
+// Missing APIs preserve offline/prewritten behavior.
+const probe = api.health
 
 let busy = false
 let pending = null
@@ -152,16 +148,8 @@ async function compose(event, detail) {
   const { llm } = await probe()
   if (llm) {
     try {
-      const r = await fetch(`${API}/say`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event, detail, recent: recent.slice(-5), builtin: candidates(event, detail), mode: pickMode() }),
-        signal: AbortSignal.timeout?.(9000),
-      })
-      if (r.ok) {
-        const reply = await r.json()
-        if (typeof reply.text === 'string' && reply.text.trim()) return reply
-      }
+      const reply = await api.say({ event, detail, recent: recent.slice(-5), builtin: candidates(event, detail), mode: pickMode() })
+      if (typeof reply.text === 'string' && reply.text.trim()) return reply
     } catch { /* fall through to the prewritten lines */ }
   }
   return fallbackLine(event, detail, recent)
@@ -185,14 +173,7 @@ async function speak(text) {
   const audio = getAudio()
   if (!tts || !audio || !soundOn()) return null
   try {
-    const r = await fetch(`${API}/tts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-      signal: AbortSignal.timeout?.(12000),
-    })
-    if (!r.ok) return null
-    return await audio.ctx.decodeAudioData(await r.arrayBuffer())
+    return await audio.ctx.decodeAudioData(await api.tts(text))
   } catch {
     return null
   }
