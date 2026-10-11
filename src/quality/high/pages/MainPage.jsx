@@ -2,7 +2,7 @@ import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'r
 import Appraisal from '../components/Appraisal.jsx'
 import Peripherals from '../components/Peripherals.jsx'
 import HoldButton from '../components/HoldButton.jsx'
-import PlugAssistant from '../components/PlugAssistant.jsx'
+import { nudge } from '../companion/brain.js'
 import CalcOverlay from '../fx/CalcOverlay.jsx'
 import { estimateWatts, readSpecs, specBonus, tierFor } from '../../../appraisal/specs.js'
 import { computeScore } from '../../../game/score.js'
@@ -56,7 +56,10 @@ export default function MainPage({ cards, tap, refresh, dev, skips, knobs, apiRe
     level: battery.level ?? specs?.battery?.level ?? null,
     why: battery.detail,
     manual,
-    setManual,
+    setManual: (v) => {
+      setManual(v)
+      if (v !== null) nudge('power', { answer: v ? 'claims they are charging by hand-cranking' : 'admits nothing is plugged in' }, 1)
+    },
     recheck,
     checking,
     rechecked,
@@ -69,6 +72,18 @@ export default function MainPage({ cards, tap, refresh, dev, skips, knobs, apiRe
   const peripherals = cards.filter((c) => c.id !== 'battery')
   const score = computeScore({ watts, bonus, tier, peripherals, powered, fakeUsbC: dev ? knobs.fake : 0 })
   const onStamped = useCallback(() => setStamped(true), [])
+  // น้องปลั๊ก's verdict on the stamp (once per stamp, not on every knob turn)
+  const stampedFor = useRef('')
+  useEffect(() => {
+    if (!stamped) stampedFor.current = ''
+    if (!stamped || !specs || stampedFor.current === tier.id) return
+    stampedFor.current = tier.id
+    nudge('tier', {
+      tier: tier.id, title: tier.title, remark: tier.remark, watts, mult: tier.mult,
+      gpu: specs.gpu, model: specs.model, why: est.why,
+      note: 'F is lowest; S, SS … then kW, MW, GW, TW, K-I, K-II, Ω are absurd',
+    }, 2)
+  })
 
   // Every run gets its own id so a new fire always starts a fresh overlay.
   const runId = useRef(0)
@@ -143,7 +158,7 @@ export default function MainPage({ cards, tap, refresh, dev, skips, knobs, apiRe
 
       {stamped && (
         <>
-          <Peripherals items={peripherals} tap={tap} mult2={score.mult2} />
+          <Peripherals items={peripherals} tap={(id) => { tap(id); nudge('peripheral', { port: peripherals.find((p) => p.id === id)?.name ?? id, mult2: score.mult2 }, 1) }} mult2={score.mult2} />
 
           <section className="panel finale">
             <span className="eyebrow">ขั้นที่ 3 · จุ่มสายและคำนวณ</span>
@@ -172,13 +187,12 @@ export default function MainPage({ cards, tap, refresh, dev, skips, knobs, apiRe
                 ⚡ ไปชาร์จด้วยมือก่อน (ขั้นที่ 1) ↑
               </button>
             ) : (
-              <HoldButton ms={dev && skips.hold ? 300 : 1500} onPrepare={() => window.dispatchEvent(new CustomEvent('ileak:helper-prepare'))} onFire={() => fire(null)}>กดค้างเพื่อจุ่มสายลงน้ำ</HoldButton>
+              <HoldButton ms={dev && skips.hold ? 300 : 1500} onPrepare={() => nudge('hold', { powered: score.powered, peripherals: score.live.length }, 1)} onFire={() => fire(null)}>กดค้างเพื่อจุ่มสายลงน้ำ</HoldButton>
             )}
           </section>
         </>
       )}
 
-      <PlugAssistant stamped={stamped} connected={peripherals.some((card) => card.live)} covered={!!run} />
       {run && (
         <CalcOverlay
           key={run.id}

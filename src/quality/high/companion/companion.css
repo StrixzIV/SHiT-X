@@ -1,0 +1,121 @@
+/* น้องปลั๊ก: an XP Messenger-ish buddy window, bottom right, above every overlay
+   (the result scene is z 60–66, the header 96). */
+.companion {
+  --cp-bottom: calc(var(--taskbar-h) + 10px);
+  position: fixed; right: 12px; bottom: var(--cp-bottom); z-index: 90;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  width: 236px; max-width: calc(100vw - 24px); pointer-events: none; font: 12px/1.6 var(--ui);
+  max-height: calc(100vh - var(--cp-bottom) - var(--header-h, 0px) - 12px);
+  max-height: calc(100dvh - var(--cp-bottom) - var(--header-h, 0px) - 12px);
+}
+.companion.covered { --cp-bottom: 12px; }
+/* hop up out of the way of the taskbar's 5 s "Found New Hardware" balloon */
+.companion { transition: bottom .25s ease-out; }
+.app:has(.hardware-balloon) .companion:not(.covered) { --cp-bottom: calc(var(--taskbar-h) + 112px); }
+.companion > * { pointer-events: auto; }
+
+/* Up to three persistent MSN bubbles; only the message bodies shrink/scroll when
+   the screen is short. The newest bubble stays nearest her window. */
+.cp-toasts { display: flex; flex-direction: column; gap: 8px; align-self: stretch; min-height: 0; }
+.cp-toast {
+  display: flex; flex-direction: column; flex-shrink: 1; min-height: 32px;
+  align-self: stretch; overflow: hidden; border: 1px solid #7a9ccf; border-radius: 6px; cursor: pointer;
+  background: linear-gradient(#ffffff, #eef5ff 55%, #dceafc); box-shadow: 2px 4px 12px #0b2a5247;
+  color: #1f2f44; animation: cp-toast .32s cubic-bezier(.2, 1.2, .4, 1);
+}
+@keyframes cp-toast { from { transform: translateY(28px); opacity: 0; } }
+.cp-toast-bar {
+  display: flex; flex: none; align-items: center; gap: 6px; padding: 4px 4px 4px 6px; border-bottom: 1px solid #b9cfee;
+  background: linear-gradient(#f4f9ff, #d5e6fb); color: #3a5578; font-size: 11px; line-height: 1.4;
+}
+.cp-toast-body { min-height: 0; max-height: 160px; overflow-y: auto; overscroll-behavior: contain; overflow-wrap: anywhere; }
+.cp-toast-bar img { flex: none; width: 20px; height: 20px; border: 1px solid #fff; border-radius: 3px; outline: 1px solid #93b0d6; object-fit: cover; }
+.cp-toast-bar span { flex: 1; min-width: 0; }
+.cp-toast-bar b { color: #1d4f91; }
+.cp-toast-bar button {
+  display: grid; place-items: center; width: 17px; height: 17px; padding: 0; border: 1px solid #9db5d6; border-radius: 3px;
+  background: linear-gradient(#fff, #dde9f8); color: #4a6789; cursor: pointer;
+}
+.cp-toast ul { list-style: none; margin: 0; padding: 6px 10px 4px; }
+.cp-toast li { padding: 1px 0 3px; font-size: 13px; line-height: 1.6; animation: cp-msg .22s ease-out; }
+.cp-toast li::before { content: '•'; margin-right: 6px; color: #5d8fd0; }
+@keyframes cp-msg { from { transform: translateX(-6px); opacity: 0; } }
+.cp-typing { display: block; padding: 2px 10px 6px; color: #6a7f98; font-size: 11px; }
+.cp-typing i { font-style: normal; animation: cp-dot 1s steps(1) infinite; }
+.cp-typing i:nth-child(2) { animation-delay: .2s; }
+.cp-typing i:nth-child(3) { animation-delay: .4s; }
+@keyframes cp-dot { 50% { opacity: 0; } }
+
+/* the window */
+.cp-window {
+  flex: none; width: 132px; border: 1px solid #0b3f9c; border-radius: 7px 7px 3px 3px; overflow: hidden;
+  background: #ece9d8; box-shadow: 2px 4px 12px #08224c66, inset 0 0 0 1px #fff8;
+}
+.cp-title {
+  display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 2px 3px 2px 7px;
+  background: linear-gradient(#5b9df7, #1d70dc 45%, #0653b9); color: #fff; font: 700 11px/1.7 var(--ui); text-shadow: 1px 1px #12519d;
+}
+.cp-title button {
+  display: grid; place-items: center; width: 17px; height: 17px; padding: 0; border: 1px solid #fff; border-radius: 3px;
+  background: linear-gradient(#5d98f4, #2c6fdf); color: #fff; cursor: pointer;
+}
+.cp-portrait {
+  position: relative; display: block; width: 116px; height: 116px; margin: 7px auto 4px; padding: 0; overflow: hidden; cursor: pointer;
+  border: 2px solid #fff; border-radius: 6px; outline: 1px solid #7f9db9; background: #1d2939;
+  box-shadow: 0 2px 5px #00000040;
+}
+/* the glossy glass over the picture */
+.cp-portrait::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(160deg, rgb(255 255 255 / .38), rgb(255 255 255 / .08) 42%, transparent 43%);
+}
+.cp-portrait img, .cp-orb img { display: block; width: 100%; height: 100%; object-fit: cover; animation: cp-face .25s ease-out; }
+@keyframes cp-face { from { transform: scale(1.08); filter: brightness(1.4); } }
+.cp-status { display: flex; align-items: center; gap: 5px; padding: 0 7px 5px; color: #334e6e; font-size: 10.5px; line-height: 1.35; }
+.cp-status i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #c9ffb8, #2fb32a 60%, #17631a); }
+.cp-status i.busy { background: radial-gradient(circle at 35% 35%, #fff3b0, #f2b419 60%, #8a5a00); }
+.cp-status i.off { background: radial-gradient(circle at 35% 35%, #ffc0b8, #d93a2a 60%, #7a120a); }
+
+/* minimised: a round glass orb */
+.cp-orb {
+  flex: none; width: 64px; height: 64px; padding: 0; overflow: hidden; border: 2px solid #fff; border-radius: 50%; cursor: pointer;
+  background: #1d2939; box-shadow: 0 0 0 1px #0b3f9c, 2px 4px 10px #08224c66;
+}
+
+/* L7: the real buddy window and finished MSN bubbles become separate debris.
+   The live notification stays at the corner until she finishes speaking. */
+.cp-space { position: fixed; inset: 0; z-index: 64; pointer-events: none; font: 12px/1.6 var(--ui); color: #1f2f44; }
+.cp-drifter {
+  position: absolute; left: 0; top: 0; width: max-content; opacity: 0; pointer-events: auto;
+  transform-origin: center; will-change: transform, opacity;
+}
+.cp-float-toast { width: 236px; max-width: calc(100vw - 24px); }
+.cp-drifter .cp-toast { animation: none; }
+.cp-drifter .cp-title, .cp-drifter .cp-toast-bar { touch-action: none; cursor: grab; }
+.cp-drifter[data-flight="held"] .cp-title, .cp-drifter[data-flight="held"] .cp-toast-bar { cursor: grabbing; }
+.cp-drifter[data-flight="gone"] { pointer-events: none; }
+
+@media (max-width: 640px) {
+  .companion { width: 200px; }
+  .cp-window { width: 104px; }
+  .cp-portrait { width: 88px; height: 88px; margin-top: 5px; }
+  .cp-status { font-size: 9.5px; }
+  .cp-toast li { font-size: 12px; }
+}
+@media (max-height: 500px) {
+  .cp-window { width: 104px; }
+  .cp-portrait { width: 48px; height: 48px; margin: 5px auto 4px; }
+  .cp-status { font-size: 9.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .companion *, .cp-space * { animation: none !important; }
+  .cp-space {
+    inset: calc(var(--header-h, 0px) + 12px) 12px auto auto; z-index: 66;
+    width: min(540px, calc(100vw - 24px)); display: flex; flex-direction: column; align-items: flex-end;
+    max-height: min(240px, calc(100vh - var(--header-h, 0px) - 120px));
+    max-height: min(240px, calc(100dvh - var(--header-h, 0px) - 120px));
+    gap: 8px; overflow-y: auto; overscroll-behavior: contain;
+  }
+  .cp-drifter { position: relative; flex: none; opacity: 1; transform: none !important; will-change: auto; }
+}
+@media print { .companion, .cp-space { display: none !important; } }

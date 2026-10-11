@@ -1,7 +1,8 @@
-import { Droplets, HelpCircle, LogIn, Power, Settings, Sparkles } from 'lucide-react'
+import { HelpCircle, LogIn, Power, Settings, Sparkles } from 'lucide-react'
+import BrandLogo from '../../components/BrandLogo.jsx'
 import { QUALITIES } from '../../qualityUrl.js'
 import { schemeSound } from '../sound/scheme.js'
-import PlugMascot from './PlugMascot.jsx'
+import { face, nudge } from '../companion/brain.js'
 
 export default function StartMenu({ quality, onQualityChange, onOpenQualityGate, onClose, onRestart }) {
   const select = (action) => {
@@ -10,13 +11,13 @@ export default function StartMenu({ quality, onQualityChange, onOpenQualityGate,
   }
   return (
     <section id="xp-start-menu" className="start-menu" aria-label="เมนู Start">
-      <header className="start-user"><span><PlugMascot /></span><div><b>ผู้ใช้สายชาร์จ</b><small>iLeak: HydroCharging</small></div></header>
+      <header className="start-user"><span><img src={face('hello')} alt="" /></span><div><b>ผู้ใช้สายชาร์จ</b><small>iLeak: HydroCharging</small></div></header>
       <div className="start-columns">
         <div className="start-apps">
           <button type="button" onClick={() => select(() => document.querySelector('.appraisal')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))}>
-            <Droplets size={29} /><span><b>iLeak: HydroCharging</b><small>ตรวจไฟรั่วในน้ำท่วม</small></span>
+            <BrandLogo decorative /><span><b>iLeak: HydroCharging</b><small>ตรวจไฟรั่วในน้ำท่วม</small></span>
           </button>
-          <button type="button" onClick={() => select(() => window.dispatchEvent(new CustomEvent('ileak:helper-show')))}>
+          <button type="button" onClick={() => select(() => nudge('help', { note: 'the user opened you from the Start menu asking for help' }, 2))}>
             <HelpCircle size={29} /><span><b>น้องปลั๊ก</b><small>ผู้ช่วยประจำเครื่อง</small></span>
           </button>
           <button type="button" onClick={() => select(() => { schemeSound('ding'); alert('เซิร์ฟเวอร์จมน้ำอยู่ ไม่สามารถเข้าสู่ระบบได้') })}>

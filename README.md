@@ -30,6 +30,25 @@ pnpm dev --host   # phones: mic/serial need HTTPS outside localhost
 
 Tick **DEV** (top right) for the dev panel: skip the agreement and other screens, set any wattage or tier, fire any FX level, and run stress tests. To add a port, write one file in `src/probes/adapters/` and add it to `src/probes/index.js`.
 
+## Firebase demo deployment
+
+Run these on the deployment machine with Node 22.12 or newer (Node 22 recommended):
+
+```sh
+git pull --ff-only
+npm ci
+npm ci --prefix functions
+npm test
+npm run lint
+npm run build
+npx firebase-tools login
+npx firebase-tools deploy --project ileak-test --only functions:companion,hosting
+```
+
+The `ileak-test` Firebase project needs the Blaze plan to run the companion function. The throwaway demo credentials are included in `functions/.env` at the user's request; Firebase loads them during function deployment. Deploy both the function and Hosting so `/api/companion/health`, `/api/companion/say`, and `/api/companion/tts` reach the backend. After deployment, `/api/companion/health` should return `{"llm":true,"tts":true}`. Open High quality and enable sound to check her voice; a browser gesture may be needed to start audio.
+
+`make deploy` installs the function dependencies, builds the app, and runs the same deployment using the default project in `.firebaserc`. To retain the optional server-side region gate, use `firebase.blaze.json` and deploy `functions,hosting` instead. The default config retains the browser's region gate.
+
 ## 🕹️ Demo & Screenshots
 
 ## 🤝 Team

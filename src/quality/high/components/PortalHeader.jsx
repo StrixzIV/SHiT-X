@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { PlugZap } from 'lucide-react'
+import BrandLogo from '../../components/BrandLogo.jsx'
 import RetroSwitch from './RetroSwitch.jsx'
 
 // The header sits above every overlay (agreement, calculation, blue screen) so the
@@ -22,9 +22,9 @@ export default function PortalHeader({ dev, onDev, panel, onPanel, children }) {
   return (
     <header ref={ref} className="portal">
       <div className="portal-brand">
-        <span className="portal-logo"><PlugZap size={23} /></span>
-        <span>
-          <b>iLeak: <em>HydroCharging</em></b>
+        <BrandLogo variant="wordmark" className="portal-wordmark" />
+        <span className="portal-brand-copy">
+          <b>HydroCharging</b>
           <small>KMITL STUPID LAB · Flood Electricity Division</small>
         </span>
       </div>

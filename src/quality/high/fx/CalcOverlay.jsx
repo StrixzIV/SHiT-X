@@ -7,6 +7,7 @@ import Boot, { ZOOM_S } from './scenes/Boot.jsx'
 import { useOrbit } from './scenes/orbit.js'
 import { RESPONDERS } from '../../../game/responders.js'
 import { chipSound, multSound, tick, xmultSound, zeroSound } from './sfx.js'
+import { nudge, setStowaway } from '../companion/brain.js'
 import './retro.css'
 
 const VERDICT = [
@@ -18,6 +19,18 @@ const VERDICT = [
   ['หายนะระดับชาติ', 'การไฟฟ้าขอให้ท่านถอดปลั๊กเพื่อความมั่นคงของชาติ'],
   ['ภัยพิบัติระดับหมอลำ', 'ไฟตกพร้อมกันทั้งอาเซียน ทุกหน่วยเตรียมรับมือ'],
   ['จักรวาลถูกรีสตาร์ท', 'ไฟรั่วของท่านกลืนทั้งกาแล็กซี เราสร้างจักรวาลใหม่ให้แล้ว (น้ำยังท่วมเหมือนเดิม)'],
+]
+
+// What each cutscene shows, for น้องปลั๊ก's remarks.
+const SCENE_ABOUT = [
+  'NES-style underwater level, Claude in a hard hat swimming: nothing happened, safe and boring',
+  'Windows XP blue screen of death',
+  'low-poly heaven: cloud stairs, god rays, a crowd waiting at the top',
+  'low-poly flooded soi at night, lightning, a giant figure at the end of the street',
+  'a skeleton being electrocuted, FAHHH',
+  'Pokemon-style battle against the flood',
+  'Metal Gear codec call about a mor lam concert blackout',
+  'a black hole swallowing the galaxy',
 ]
 
 const POPUP = { chips: (v) => `+${fmt(v)}`, mult: (v) => `+${v} Mult`, xmult: (v) => `X${v} Mult`, zero: () => 'X0' }
@@ -90,8 +103,25 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
   const Scene = SCENES[level]
   const [title, sub] = VERDICT[level]
 
+  // On L7 her own Messenger window floats independently of the result sheet.
+  useEffect(() => {
+    if (phase === 'loading') nudge('calc', { chips: steps.length, note: 'Balatro-style score tally, then a PS2 boot zoom' }, 1)
+    else if (phase === 'scene') nudge('scene', { level, of: 7, verdict: title, scene: SCENE_ABOUT[level] }, 2)
+    else if (orbits) {
+      setStowaway(true)
+      nudge('l7:pulled', { note: 'your whole Messenger window is orbiting the black hole independently; each finished MSN notification gets sucked in and floats around too', volts: fmt(total) }, 2)
+    } else nudge('result', { level, volts: fmt(total), verdict: title, responder: RESPONDERS[level].org, reply: RESPONDERS[level].reply }, 2)
+  }, [phase, level, orbits, steps.length, title, total])
+  useEffect(() => () => setStowaway(false), [])
+  const close = () => {
+    if (orbits) setStowaway(false)
+    onClose()
+    // React removes the scene before she reacts to being back on the desktop.
+    setTimeout(() => nudge(orbits && phase === 'result' ? 'l7:released' : 'again', { note: orbits ? 'the user closed the black-hole result; you are free again' : 'the user wants to appraise again' }, 2), 0)
+  }
+
   return (
-    <div className={`calc phase-${phase}${zoom && phase === 'loading' ? ' zooming' : ''}`} role="dialog" aria-modal="true" aria-label="ผลการคำนวณ">
+    <div className={`calc phase-${phase}${zoom && phase === 'loading' ? ' zooming' : ''}`} data-level={level} data-scene={SCENE_ABOUT[level]} data-verdict={title} data-volts={fmt(total)} role="dialog" aria-modal="true" aria-label="ผลการคำนวณ">
       {phase === 'loading' ? (
         <>
           <Boot zoom={zoom} speed={speed} />
@@ -152,11 +182,11 @@ export default function CalcOverlay({ score, tier, speed = 1, skip = false, auto
           {cert && <Certificate cert={cert} tier={tier} volts={fmt(total)} verdict={title} />}
           <div className="result-foot">
             {!cert && (
-              <button type="button" className="btn-line" onClick={() => setCert({ id: `ILEAK-${tier.id}-${Math.floor(1000 + Math.random() * 9000)}`, date: new Date().toLocaleDateString('th-TH') })}>
+              <button type="button" className="btn-line" onClick={() => { nudge('cert', { tier: tier.id }, 1); setCert({ id: `ILEAK-${tier.id}-${Math.floor(1000 + Math.random() * 9000)}`, date: new Date().toLocaleDateString('th-TH') }) }}>
                 <Award size={18} /> ออกใบรับรอง
               </button>
             )}
-            <button type="button" className="btn-gold" onClick={onClose}><RotateCcw size={18} /> ประเมินใหม่</button>
+            <button type="button" className="btn-gold" onClick={close}><RotateCcw size={18} /> ประเมินใหม่</button>
           </div>
         </div>
       )}

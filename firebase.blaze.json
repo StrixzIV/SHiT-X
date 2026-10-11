@@ -9,6 +9,10 @@
     ],
     "rewrites": [
       {
+        "source": "/api/companion/**",
+        "function": { "functionId": "companion", "region": "asia-southeast1" }
+      },
+      {
         "source": "**",
         "function": "geoGatekeeper"
       }

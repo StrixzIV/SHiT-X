@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { noise, session, tone } from '../audio.js'
 import { shot } from './gargantua.js'
 import { createUiLens } from './uiLens.js'
+import { nudge } from '../../companion/brain.js'
 
 // L7: the result sheet slides up, Gargantua grabs it and keeps it in orbit.
 // · drag it to fling it; gravity bends it back into a lap
@@ -215,6 +216,7 @@ export function useOrbit(ref, on) {
       }
       if (span > 0.01) spin += clamp(((end[3] - start[3]) / span) * 0.004, -6, 6)
       if (v > 0.5) whoosh(Math.min(v, VMAX))
+      if (v > 1) nudge('l7:fling', { subject: 'result-card', note: 'the user flung the result card past your independently orbiting Messenger window' }, 1)
     }
     const swallow = (x, y) => {
       mode = 'fall'
@@ -223,6 +225,7 @@ export function useOrbit(ref, on) {
       el.inert = true
       el.dataset.gone = ''
       gulp()
+      nudge('l7:swallow', { subject: 'result-card', note: 'the result card fell into the black hole; your own window and many old MSN bubbles are still floating around it; blame the user' }, 2)
     }
     const emit = () => {
       // out of the hole toward the open sky, then back into the lap
@@ -244,6 +247,7 @@ export function useOrbit(ref, on) {
       el.inert = false
       delete el.dataset.gone
       spit()
+      nudge('l7:spit', { subject: 'result-card', note: 'the black hole spat the result card back out beside your orbiting window and MSN notification debris' }, 2)
     }
 
     const frame = (now) => {

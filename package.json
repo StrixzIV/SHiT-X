@@ -8,6 +8,7 @@
     "build": "vite build && mkdir -p functions/dist && cp -f dist/index.html functions/dist/index.html",
     "serve:geo": "node functions/dev-server.js",
     "lint": "oxlint",
+    "test": "node --test functions/companion.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

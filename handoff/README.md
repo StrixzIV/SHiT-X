@@ -4,6 +4,8 @@ Start here when resuming work. This directory records changes made while another
 
 ## Work log
 
+The pending 2026-10-11 work below was reviewed together and included in the integration commit. See [review fixes, verification and the friend's deployment steps](2026-10-11-integration-review.md). Older task notes retain their original status as historical records.
+
 | Date | Task | State when recorded |
 | --- | --- | --- |
 | 2026-10-10 | [L7 black hole result-card orbit and dragging](2026-10-10-l7-black-hole.md) | Completed and verified, with two follow-up fixes; committed and pushed 2026-10-10 |
@@ -16,6 +18,14 @@ Start here when resuming work. This directory records changes made while another
 | 2026-10-11 | [L7 black-hole shader lenses UI light around its rim](2026-10-11-l7-ui-light-ring.md) | User's clarified scope; done, verified, committed and pushed 2026-10-11 (7c207c8) |
 | 2026-10-11 | [L0 underwater, L5 Hoenn/RSE battle and L6 Metal Gear Codec audio](2026-10-11-scene-audio.md) | L0/L5 invented melodies rejected and superseded below; L6 retained, committed and pushed 2026-10-11 (7c207c8) |
 | 2026-10-11 | [Correct L0/L5 to openings of the original NES Mario and Hoenn battle themes](2026-10-11-original-theme-correction.md) | Done; reference/render/scene checks passed, committed and pushed 2026-10-11 (7c207c8) |
+| 2026-10-11 | [Replaceable music, sound and graphics filenames](2026-10-11-replaceable-assets.md) | Audited; full list in `public/fx/README.md`, uncommitted |
+| 2026-10-11 | [Tier card contrast and per-tier backdrops (Claude)](2026-10-11-tier-cards.md) | Done; screenshots checked, uncommitted |
+| 2026-10-11 | [น้องปลั๊ก companion: DeepSeek lines, Paxa voice, L7 stowaway (Claude)](2026-10-11-companion.md) | Done; replaces GPT's PlugAssistant; mock-API and browser checks, real keys untested, uncommitted |
+| 2026-10-11 | [Persistent MSN bubbles grouped by message time](2026-10-11-msn-persistent-bubbles.md) | Done; speech, grouping, phone layout, L7 and fallback browser checks passed; lint/build passed, uncommitted |
+| 2026-10-11 | [L7 independent companion window and floating MSN bubble pile](2026-10-11-l7-companion-debris.md) | Done; functional, real-shader desktop/phone, reduced-motion controls and desktop regressions passed; lint/build passed, uncommitted |
+| 2026-10-11 | [Result-scene awareness and shouts from the black hole](2026-10-11-companion-surroundings.md) | Done; mocked policy, middleware, browser and speech checks passed, uncommitted |
+| 2026-10-11 | [Low and Medium quality trees implemented](2026-10-11-low-medium-trees.md) | Done; lint/build/browser checks passed, uncommitted |
+| 2026-10-11 | [Combined-agent review and Firebase companion demo API](2026-10-11-integration-review.md) | Reviewed and verified; included in this integration commit; deployment is on the friend's machine |
 
 ## Adding notes
 

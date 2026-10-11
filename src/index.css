@@ -67,7 +67,9 @@ body {
 .portal-brand b { display: block; font: 800 16px var(--serif); letter-spacing: .06em; }
 .portal-brand em { font-style: normal; color: var(--gold); }
 .portal-brand small { display: block; font-size: 11px; color: var(--muted); }
-.portal-logo { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--gold); border: 1px solid var(--gold); }
+.brand-logo { display: block; flex: none; object-fit: contain; }
+.brand-logo-mark { width: 24px; height: 24px; }
+.brand-logo-wordmark, .brand-logo-stacked { height: auto; }
 .portal-tools { display: flex; gap: 6px; }
 .portal-tools button { display: flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 999px; background: transparent; color: var(--text); border: 1px solid var(--line); font-size: 13px; cursor: pointer; }
 .portal-tools .login span { display: none; }
@@ -565,7 +567,7 @@ body {
   background: #66b8f1 url('/ui/desktop.svg') center / cover fixed no-repeat;
 }
 .app { min-height: 100vh; min-height: 100dvh; padding-bottom: var(--taskbar-h); }
-.btn-gold, .btn-line, .gate-read, .plug-actions button {
+.btn-gold, .btn-line, .gate-read {
   border: 1px solid #7186a3; border-radius: 4px; color: #192940;
   background: linear-gradient(#fff 0%, #fafaf6 40%, #eae9e2 94%, #d0cec4);
   box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #d5d8dc;
@@ -573,7 +575,7 @@ body {
   padding: 8px 16px; transition: box-shadow .12s, background .12s;
 }
 .btn-gold { border-color: #3973b9; box-shadow: inset 0 0 0 2px #c5defa, 0 1px 0 #fff; }
-.btn-gold:hover:not(:disabled), .btn-line:hover:not(:disabled), .gate-read:hover:not(:disabled), .plug-actions button:hover { filter: none; border-color: #c1822d; box-shadow: inset 0 0 0 2px #ffd58a; }
+.btn-gold:hover:not(:disabled), .btn-line:hover:not(:disabled), .gate-read:hover:not(:disabled) { filter: none; border-color: #c1822d; box-shadow: inset 0 0 0 2px #ffd58a; }
 .btn-gold:active:not(:disabled), .btn-line:active:not(:disabled) { background: #dce6f0; transform: none; box-shadow: inset 1px 1px 2px #8ca4bd; }
 .btn-gold:disabled, .btn-line:disabled, .gate-read:disabled { color: #8b8c85; background: #eeede6; border-color: #b2b4ad; cursor: not-allowed; box-shadow: none; }
 button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #f0971a; outline-offset: 3px; }
@@ -587,7 +589,8 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .portal-brand b { font: 700 20px/1.35 var(--title); letter-spacing: -.02em; text-shadow: 1px 1px 1px #174f9d; white-space: nowrap; }
 .portal-brand em { color: #fff; }
 .portal-brand small { color: #d9edff; font: 10px/1.6 var(--ui); letter-spacing: .03em; }
-.portal-logo { width: 36px; height: 36px; flex: none; border-radius: 8px; border: 1px solid #c9eeff; color: #fff; background: linear-gradient(145deg, #b8f490, #4ca82b 52%, #1e741b); box-shadow: inset 1px 1px 2px #efffd8, 0 1px 3px #184caa; }
+.portal-wordmark { width: 132px; filter: drop-shadow(0 1px 2px #00377b); }
+.portal-brand-copy { min-width: 0; }
 .portal-tools { align-items: center; gap: 7px; flex-wrap: nowrap; }
 .portal-tools button { border-radius: 3px; padding: 6px 9px; font: 700 11px/1.5 var(--ui); cursor: pointer; }
 .retro-switch { border: 1px solid #033c8e; border-radius: 4px; box-shadow: 0 1px 0 #88b9ff; }
@@ -648,7 +651,8 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .hold-fill { background: linear-gradient(90deg, #217bcb, #51acec, #ffd244); }
 .crank { border-color: #7b9c6f; border-radius: 3px; background: #fff; }
 .crank span { background: repeating-linear-gradient(90deg, #59b746 0 9px, #a1d980 9px 11px, #eaf5e4 11px 13px); }
-.gate { background: #326d9c30; padding-top: calc(var(--header-h, 0px) + 24px); padding-bottom: 24px; }
+/* the agreement stops at the taskbar, which stays visible (disabled) under it */
+.gate { bottom: var(--taskbar-h); background: #326d9c30; padding-top: calc(var(--header-h, 0px) + 24px); padding-bottom: 24px; }
 .gate-sheet { background: #ece9d8; border: 3px solid #2674d7; border-radius: 8px; padding: 20px; gap: 20px; box-shadow: 3px 8px 24px #092c675e; }
 .gate-sheet.xp-dialog { padding: 0; display: flex; flex-direction: column; gap: 0; max-height: calc(100vh - var(--header-h, 0px) - 48px); max-height: calc(100dvh - var(--header-h, 0px) - 48px); overflow: hidden; }
 .xp-titlebar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 7px 7px 10px; flex: none; color: #fff; background: linear-gradient(#0997ff, #0053ee 10%, #0050ee 50%, #0066ff 90%, #0043c8); font: 700 13px/1.6 var(--title); text-shadow: 1px 1px #12478d; }
@@ -658,6 +662,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .gate-content { padding: 22px 24px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .gate-content > section { margin-top: 22px; }
 .gate-head { position: relative; }
+.quality-brand { width: 100px; margin: 0 auto 14px; }
 .gate-head h1 { font: 700 clamp(24px, 4vw, 32px)/1.5 var(--title); letter-spacing: -.02em; margin: 3px 0 8px; }
 .gate-head h1 em { color: #155ca7; background: none; }
 .gate-head p { color: #34455d; }
@@ -675,12 +680,12 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .gate-check input { margin-top: 4px; }
 .gate-real { color: #88372f; border-color: #d99783; background: #fff4e7; border-radius: 3px; }
 .gate-sequence { display: flex; align-items: center; justify-content: center; padding: calc(var(--header-h, 0px) + 16px) 12px 16px; background: #123a6126; }
-.gate-sequence .gate-sheet { width: 100%; margin: 0; border: 3px solid #0055ea; border-bottom-color: #003ddc; border-radius: 7px 7px 0 0; box-shadow: inset 0 0 0 1px #63a1ff, 2px 3px 9px #10275255; outline: none; max-height: calc(100vh - var(--header-h, 0px) - 32px); max-height: calc(100dvh - var(--header-h, 0px) - 32px); color: #000; }
+.gate-sequence .gate-sheet { width: 100%; margin: 0; border: 3px solid #0055ea; border-bottom-color: #003ddc; border-radius: 7px 7px 0 0; box-shadow: inset 0 0 0 1px #63a1ff, 2px 3px 9px #10275255; outline: none; max-height: calc(100vh - var(--header-h, 0px) - var(--taskbar-h) - 32px); max-height: calc(100dvh - var(--header-h, 0px) - var(--taskbar-h) - 32px); color: #000; }
 .gate-sequence .xp-titlebar { min-height: 27px; padding: 2px 2px 3px 5px; gap: 8px; }
 .gate-sequence .xp-titlebar h2 { margin: 0; color: #fff; font: 700 13px/1.6 var(--title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 .gate-sequence .xp-close { width: 21px; height: 21px; padding: 0; background: linear-gradient(135deg, #f7b59f, #e87559 35%, #ce4124 65%, #bb351e); box-shadow: inset 1px 1px 1px #ffffffb3, inset -1px -1px 1px #862719; }
 .gate-sequence .xp-close:hover { filter: brightness(1.12); }
-.gate-error-layer { position: fixed; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; padding: calc(var(--header-h, 0px) + 32px) 12px 16px; background: #00000026; }
+.gate-error-layer { position: fixed; inset: 0 0 var(--taskbar-h); z-index: 1; display: flex; align-items: center; justify-content: center; padding: calc(var(--header-h, 0px) + 32px) 12px 16px; background: #00000026; }
 .gate-error-layer .gate-error { max-width: 430px; box-shadow: 3px 5px 14px #0006; }
 .xp-error-icon { width: 32px; height: 32px; margin-top: 2px; }
 .gate-sequence .gate-sheet[aria-hidden='true'] .xp-titlebar { background: linear-gradient(#a6c1f3, #8ea9eb 50%, #7d98e2); text-shadow: none; }
@@ -701,6 +706,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .gate-final .gate-content { padding: 22px; }
 .gate-consent-head { display: flex; gap: 14px; align-items: center; margin-bottom: 20px; }
 .gate-app-icon { display: grid; place-items: center; width: 56px; height: 56px; flex: none; background: linear-gradient(#66b8fa, #176bc4); border: 1px solid #07529a; border-radius: 12px; box-shadow: inset 0 1px 0 #d5efff; color: #fff; }
+.gate-app-icon .brand-logo { width: 42px; height: 42px; }
 .gate-consent-head h1 { font: 700 clamp(18px, 4.5vw, 24px)/1.65 var(--title); color: #174c85; }
 .gate-consent-head p { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #428333; }
 .gate-safety { margin: 0; padding: 0; border: 0; min-width: 0; animation: none; }
@@ -723,7 +729,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   .gate-final .gate-content { padding: 15px 13px; }
   .gate-consent-head { gap: 10px; margin-bottom: 16px; }
   .gate-app-icon { width: 42px; height: 42px; border-radius: 8px; }
-  .gate-app-icon svg { width: 25px; height: 25px; }
+  .gate-app-icon .brand-logo { width: 32px; height: 32px; }
   .gate-consent-footer { padding: 10px 13px 12px; }
 }
 .gate .tile { border-radius: 4px !important; border-color: #98b2d0 !important; background: #fff !important; flex-direction: row; }
@@ -762,11 +768,12 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .act { border-radius: 4px; background: #f2f6fc; }
 .cert { position: relative; overflow: hidden; margin-top: 16px; padding: 18px 68px 16px 16px; text-align: left; border: 1px solid #809b84; border-radius: 5px; color: #273c36; box-shadow: inset 0 0 0 3px #f3f8df, 0 2px 4px #345f5830; background-color: #e5ecd3; background-image: repeating-radial-gradient(ellipse at 20% 120%, transparent 0 5px, #74987222 5.5px 6px, transparent 6.5px 10px), repeating-radial-gradient(ellipse at 110% -30%, transparent 0 7px, #809d7622 7.5px 8px, transparent 8.5px 14px); }
 .coa-brand { display: flex; align-items: center; gap: 7px; color: #204f70; font: 700 17px/1.6 var(--title); }
+.coa-brand .brand-logo { width: 104px; }
 .coa-heading { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px 8px; align-items: center; }
 .coa-heading strong { font: 700 13px/1.6 var(--title); color: #365e53; }
 .coa-edition { background: #215d85; color: #fff; font: 700 10px/1.8 var(--ui); padding: 1px 6px; border-radius: 2px; }
 .coa-hologram { position: absolute; right: 12px; top: 12px; bottom: 12px; width: 42px; padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 16px; border: 1px solid #96ada0; background: repeating-linear-gradient(135deg, #d9ebe2 0 8px, #b3dae0 12px, #e4cbe8 19px, #f4edbe 27px, #d9ebe2 36px); box-shadow: inset 0 0 0 2px #ffffff80; }
-.coa-hologram svg { color: #3d7281; }
+.coa-hologram .brand-logo { width: 30px; height: 30px; }
 .coa-hologram span { text-align: center; font: 700 7px/2.3 var(--ui); letter-spacing: .05em; color: #57827a; }
 .cert-id { display: block; font: 9px/1.7 ui-monospace, monospace; background: none; padding: 0; margin: 7px 0 2px; color: #55726a; }
 .cert h3 { font: 700 17px/1.65 var(--title); }
@@ -783,14 +790,14 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .start-button:hover, .start-button.on { background: linear-gradient(#9fdd7d, #54af48 18%, #2e8c30); }
 .taskbar-app { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 240px; padding: 5px 14px; border: 1px solid #094495; border-radius: 4px; background: #1756b0; color: #fff; box-shadow: inset 1px 1px 3px #082f7f, 1px 1px 0 #68a4fa; font: inherit; cursor: pointer; }
 .taskbar-app span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.taskbar-app svg { flex: none; }
+.taskbar-app .brand-logo { width: 18px; height: 18px; }
 .taskbar-tray { display: flex; align-items: center; align-self: stretch; gap: 10px; margin-left: auto; padding: 0 14px; background: linear-gradient(#50baf4, #18a0e4 20%, #168fce); border-left: 1px solid #07649d; box-shadow: inset 1px 0 0 #85d8ff; }
 .taskbar-tray > button { border: 0; padding: 4px; background: none; color: #fff; cursor: pointer; }
 .taskbar-tray time { white-space: nowrap; min-width: 40px; text-align: center; font-size: 12px; }
 .start-menu { position: absolute; left: 0; bottom: 100%; width: 390px; max-width: calc(100vw - 8px); border: 2px solid #1966c7; border-radius: 7px 7px 0 0; background: #fff; box-shadow: 3px -3px 12px #092c6759; overflow: hidden; color: #193a61; }
 .start-user { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: linear-gradient(#458fea, #0e5dc6); color: #fff; border-bottom: 2px solid #edaa43; }
 .start-user > span { width: 48px; height: 48px; background: #e2effb; border: 2px solid #fff; border-radius: 5px; overflow: hidden; }
-.start-user svg { height: 48px; width: 46px; }
+.start-user img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .start-user b { font: 700 17px/1.6 var(--title); text-shadow: 1px 1px #164d91; }
 .start-user small { display: block; color: #d5eaff; font-size: 10px; }
 .start-columns { display: grid; grid-template-columns: 1.1fr 1fr; min-height: 225px; }
@@ -800,6 +807,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .start-columns svg { flex: none; color: #2785cc; }
 .start-columns button:hover svg { color: #fff; }
 .start-apps b { display: block; font-size: 12px; }
+.start-apps .brand-logo { width: 29px; height: 29px; }
 .start-apps small { display: block; font-size: 10px; }
 .start-settings { padding: 12px 9px; background: #dbeafa; border-left: 1px solid #a7c4e4; }
 .start-quality { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -817,16 +825,6 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .hardware-balloon small { display: block; color: #65798e; font-size: 10px; }
 .hardware-balloon p { margin-top: 5px; font-size: 12px; overflow-wrap: anywhere; }
 .hardware-balloon button { padding: 0; border: 0; background: none; color: #6b7e8f; cursor: pointer; }
-.plug-assistant { position: fixed; right: 18px; bottom: calc(var(--taskbar-h) + 12px); z-index: 40; width: 285px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: none; }
-.plug-speech { position: relative; align-self: stretch; padding: 12px 14px 10px; border: 1px solid #567794; border-radius: 7px; background: #ffffe1; box-shadow: 2px 4px 9px #143c6b33; color: #283d51; font: 12px/1.75 var(--ui); pointer-events: auto; }
-.plug-speech::after { content: ''; position: absolute; right: 39px; bottom: -7px; width: 12px; height: 12px; transform: rotate(45deg); background: #ffffe1; border-right: 1px solid #567794; border-bottom: 1px solid #567794; }
-.plug-speech-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; color: #185fa0; }
-.plug-speech-title button { padding: 0; border: 0; background: none; color: #6e8194; cursor: pointer; }
-.plug-actions { display: flex; gap: 7px; margin-top: 9px; }
-.plug-actions button { font-size: 11px; padding: 3px 16px; cursor: pointer; }
-.plug-dismiss { margin-top: 7px; padding: 0; border: 0; background: none; color: #627483; font: 10px/1.8 var(--ui); text-decoration: underline; cursor: pointer; }
-.plug-character { display: block; width: 88px; height: 99px; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; }
-.plug-character svg { width: 100%; height: 100%; }
 .restart-backdrop { position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: grid; place-items: center; background: #0b2c7866; padding: 20px; }
 .restart-dialog { width: min(420px, 100%); color: #1d3554; background: #ece9d8; border: 3px solid #2674d7; border-radius: 6px; overflow: hidden; box-shadow: 3px 6px 18px #09245166; }
 .restart-content { padding: 25px; text-align: center; }
@@ -839,8 +837,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   .portal { padding: 7px 8px; gap: 7px; min-height: 48px; }
   .portal-brand b { font-size: 13px; letter-spacing: -.03em; }
   .portal-brand small { display: none; }
-  .portal-logo { width: 27px; height: 29px; border-radius: 5px; }
-  .portal-logo svg { width: 19px; }
+  .portal-wordmark { width: 102px; }
   .portal-brand { gap: 5px; }
   .portal-tools { gap: 4px; }
   .retro-switch button { font-size: 10px; padding: 5px 6px; }
@@ -876,19 +873,16 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   .cert { padding: 14px 59px 14px 12px; }
   .coa-hologram { right: 9px; width: 35px; }
   .coa-brand { font-size: 14px; gap: 4px; }
+  .coa-brand .brand-logo { width: 80px; }
   .cert h3 { font-size: 15px; }
   .start-button { min-width: 96px; padding: 0 12px 0 9px; }
   .taskbar { gap: 7px; }
   .taskbar-app { padding: 5px 8px; gap: 5px; font-size: 10px; }
   .taskbar-tray { gap: 7px; padding: 0 9px; }
-  .plug-assistant { right: 12px; bottom: calc(var(--taskbar-h) + 8px); width: 250px; gap: 8px; }
-  .plug-character { width: 64px; height: 72px; }
   .start-menu { max-height: calc(100vh - var(--header-h, 48px) - var(--taskbar-h) - 8px); overflow-y: auto; }
 }
-@media (max-width: 360px) {
-  .portal-brand b { font-size: 11px; }
-  .portal-logo { display: none; }
-  .taskbar-app svg { display: none; }
+@media (max-width: 480px) {
+  .portal-brand-copy { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
@@ -896,7 +890,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 @media print {
   body { background: #fff; }
   .app { padding: 0; }
-  .portal, .taskbar, .plug-assistant, .browser-notice, .fps, .main > :not(.calc) { display: none !important; }
+  .portal, .taskbar, .browser-notice, .fps, .main > :not(.calc) { display: none !important; }
   .main { display: block; margin: 0; padding: 0; max-width: none; }
   .calc { display: block; padding: 0; overflow: visible; background: none; }
   /* Keep scene dimensions for the orbit's ResizeObserver while hiding its print ink. */

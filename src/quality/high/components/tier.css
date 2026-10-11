@@ -1,0 +1,143 @@
+/* Tier cards (Appraisal.jsx): the higher the tier, the more absurd the card.
+   F–A stay light XP cards; S–SSS are foil; SSSS and up are dark set pieces with
+   light, shadowed text so they always read. Two-class selectors so this wins
+   over the XP restyle in index.css. Reduced motion stops it all (index.css). */
+.tier-card { position: relative; overflow: hidden; isolation: isolate; }
+.tier-card > * { position: relative; z-index: 2; }
+.tier-card::before, .tier-card::after { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.tier-card::after { z-index: 1; }
+
+/* A: silver that shows on a light card */
+.tier-card.tier-a .tier-letter { background-image: linear-gradient(180deg, #a9b4c0, #4a5561 65%, #1d242c); }
+
+/* S: gold foil with a sheen sweeping across */
+.tier-card.tier-s { background: linear-gradient(120deg, #fff6d8, #ffe39a 45%, #fff8e3); border-color: #c99a2e; }
+.tier-card.tier-s::after,
+.tier-card.tier-ss::after { content: ''; background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / .9) 48%, transparent 58%); background-size: 260% 100%; animation: tier-sheen 2.6s ease-in-out infinite; }
+@keyframes tier-sheen { from { background-position: 160% 0; } to { background-position: -110% 0; } }
+
+/* SS, SSS: holographic foil (SSS twinkles too) */
+.tier-card.tier-ss, .tier-card.tier-sss { background: #fdfcff; border-color: #b58cff; }
+.tier-card.tier-ss::before, .tier-card.tier-sss::before {
+  content: ''; inset: -60%;
+  background: conic-gradient(#ff9ad5, #ffe78a, #9affe6, #a7b5ff, #e6a0ff, #ff9ad5);
+  opacity: .45; filter: blur(18px) saturate(1.5); animation: tier-turn 5s linear infinite;
+}
+.tier-card.tier-sss::after {
+  content: '';
+  background:
+    linear-gradient(105deg, transparent 38%, rgb(255 255 255 / .9) 48%, transparent 58%) 0 0 / 260% 100%,
+    radial-gradient(circle, #fff 0 1.5px, transparent 2.5px) 12% 22% / 60px 50px,
+    radial-gradient(circle, #fff 0 1px, transparent 2px) 70% 65% / 44px 38px;
+  animation: tier-sheen 1.8s ease-in-out infinite, tier-twinkle .7s steps(2) infinite;
+}
+@keyframes tier-turn { to { transform: rotate(360deg); } }
+@keyframes tier-twinkle { 50% { opacity: .55; } }
+
+/* ---- the dark set pieces ---- */
+.tier-card.tier-ssss, .tier-card.tier-kw, .tier-card.tier-mw, .tier-card.tier-gw,
+.tier-card.tier-tw, .tier-card.tier-k1, .tier-card.tier-k2, .tier-card.tier-omega { border-color: #fff; color: #fff; }
+.tier-card.tier-ssss .tier-info :is(h3, b, small), .tier-card.tier-kw .tier-info :is(h3, b, small),
+.tier-card.tier-mw .tier-info :is(h3, b, small), .tier-card.tier-gw .tier-info :is(h3, b, small),
+.tier-card.tier-tw .tier-info :is(h3, b, small), .tier-card.tier-k1 .tier-info :is(h3, b, small),
+.tier-card.tier-k2 .tier-info :is(h3, b, small), .tier-card.tier-omega .tier-info :is(h3, b, small),
+.tier-card.tier-ssss .tier-info, .tier-card.tier-kw .tier-info, .tier-card.tier-mw .tier-info, .tier-card.tier-gw .tier-info,
+.tier-card.tier-tw .tier-info, .tier-card.tier-k1 .tier-info, .tier-card.tier-k2 .tier-info, .tier-card.tier-omega .tier-info {
+  color: #fff; text-shadow: 0 1px 2px #000, 0 0 10px rgb(0 0 0 / .7);
+}
+.tier-card.tier-ssss .tier-info p, .tier-card.tier-kw .tier-info p, .tier-card.tier-mw .tier-info p, .tier-card.tier-gw .tier-info p,
+.tier-card.tier-tw .tier-info p, .tier-card.tier-k1 .tier-info p, .tier-card.tier-k2 .tier-info p, .tier-card.tier-omega .tier-info p { color: #eef3ff; }
+.tier-card.tier-ssss .eyebrow, .tier-card.tier-kw .eyebrow, .tier-card.tier-mw .eyebrow, .tier-card.tier-gw .eyebrow,
+.tier-card.tier-tw .eyebrow, .tier-card.tier-k1 .eyebrow, .tier-card.tier-k2 .eyebrow, .tier-card.tier-omega .eyebrow { color: #ffd76a; }
+
+/* SSSS: a spinning rainbow border round a dark card, confetti inside */
+.tier-card.tier-ssss .tier-letter { font-size: clamp(48px, 10vw, 70px); }
+.tier-card.tier-ssss { background: #14051f; }
+.tier-card.tier-ssss::before { content: ''; inset: -80%; background: conic-gradient(#ff5ea8, #ffd23f, #5effe3, #5e8bff, #a55eff, #ff5ea8); animation: tier-turn 2.2s linear infinite; }
+.tier-card.tier-ssss::after {
+  content: ''; inset: 4px; border-radius: 3px;
+  background:
+    radial-gradient(circle, #ffd23f 0 2px, transparent 3px) 10% 20% / 70px 56px,
+    radial-gradient(circle, #5effe3 0 2px, transparent 3px) 55% 70% / 90px 64px,
+    radial-gradient(circle, #ff5ea8 0 2px, transparent 3px) 80% 30% / 60px 80px,
+    #14051f;
+  animation: tier-confetti 3s linear infinite;
+}
+@keyframes tier-confetti { to { background-position: 10% 220%, 55% 260%, 80% 200%, 0 0; } }
+
+/* kW: a crawling hazard-stripe border, a work light flickering */
+.tier-card.tier-kw { background: #1a1205; }
+.tier-card.tier-kw::before { content: ''; background: repeating-linear-gradient(45deg, #ffd000 0 14px, #111 14px 28px); background-size: 40px 40px; animation: tier-crawl .6s linear infinite; }
+.tier-card.tier-kw::after { content: ''; inset: 7px; border-radius: 2px; background: radial-gradient(circle at 18% 40%, rgb(255 200 80 / .55), transparent 45%), #1a1205; animation: tier-flicker 1.3s steps(1) infinite; }
+@keyframes tier-crawl { to { background-position: 40px 0; } }
+@keyframes tier-flicker { 0%, 100% { opacity: 1; } 41% { opacity: .55; } 43% { opacity: 1; } 71% { opacity: .7; } }
+
+/* MW: the reservoir: deep water flowing past, light rippling up from below */
+.tier-card.tier-mw { background: linear-gradient(#021a33, #064e86); }
+.tier-card.tier-mw::before { content: ''; background: repeating-linear-gradient(172deg, rgb(160 220 255 / .14) 0 6px, transparent 6px 22px); background-size: 100% 180px; animation: tier-flow 1.4s linear infinite; }
+.tier-card.tier-mw::after { content: ''; background: radial-gradient(ellipse at 50% 120%, rgb(56 189 248 / .6), transparent 60%); animation: tier-swell 1.6s ease-in-out infinite alternate; }
+@keyframes tier-flow { to { background-position: 0 180px; } }
+@keyframes tier-swell { to { opacity: .4; transform: scaleY(1.15); } }
+
+/* GW: an electric border and lightning flashing through */
+.tier-card.tier-gw { background: #0a0620; }
+.tier-card.tier-gw::before { content: ''; inset: -80%; background: conic-gradient(#7df9ff, transparent 20%, #fff 30%, transparent 45%, #4f46e5 60%, transparent 75%, #7df9ff); animation: tier-turn .9s linear infinite; }
+.tier-card.tier-gw::after {
+  content: ''; inset: 3px; border-radius: 3px;
+  background: radial-gradient(circle at 70% 30%, rgb(200 240 255 / .9), transparent 40%) no-repeat, #0a0620;
+  background-size: 0 0, auto; animation: tier-strike 1.7s steps(1) infinite;
+}
+@keyframes tier-strike { 0%, 100% { background-size: 0 0, auto; } 30% { background-size: 100% 100%, auto; } 33% { background-size: 0 0, auto; } 36% { background-size: 100% 100%, auto; } 39% { background-size: 0 0, auto; } }
+
+/* TW: a small sun burning behind the letter, rays turning, heat rising */
+.tier-card.tier-tw { background: radial-gradient(circle at 12% 50%, #fff7c2, #ffb000 10%, #d43d00 24%, #5a1200 44%, #2a0700 75%); }
+.tier-card.tier-tw::before { content: ''; inset: auto; width: 1400px; height: 1400px; left: calc(14% - 700px); top: calc(50% - 700px); background: repeating-conic-gradient(rgb(255 230 120 / .28) 0 5deg, transparent 5deg 16deg); animation: tier-turn 14s linear infinite; }
+.tier-card.tier-tw::after { content: ''; background: linear-gradient(0deg, rgb(255 120 0 / .35), transparent 60%); animation: tier-swell .5s ease-in-out infinite alternate; }
+.tier-card.tier-tw .tier-letter { background-image: radial-gradient(circle, #fff 12%, #ffe066 34%, #ff4d00 72%); filter: drop-shadow(0 0 1px #2a0700) drop-shadow(0 0 1px #2a0700) drop-shadow(0 2px 6px #2a0700); }
+.tier-card.tier-tw .tier-info { text-shadow: 0 1px 2px #2a0700, 0 0 4px #2a0700, 0 0 12px rgb(42 7 0 / .9); }
+.tier-card.tier-tw .eyebrow { color: #fff3c4; }
+
+/* K-I: a planet rising on the right, a moon going round it */
+.tier-card.tier-k1 {
+  background:
+    radial-gradient(circle at 88% 55%, #9ee6ff 0, #1e90ff 18%, #2ecc71 30%, #0b3d91 48%, rgb(30 144 255 / .35) 52%, transparent 60%),
+    radial-gradient(circle, #fff 0 1px, transparent 1.5px) 0 0 / 46px 38px,
+    #020b1f;
+}
+.tier-card.tier-k1::after { content: ''; width: 14px; height: 14px; inset: auto; top: calc(55% - 7px); left: calc(88% - 7px); border-radius: 50%; background: #e8e8e8; box-shadow: 0 0 8px #fff; animation: tier-orbit 4s linear infinite; }
+@keyframes tier-orbit { from { transform: rotate(0deg) translateX(110px) rotate(0deg); } to { transform: rotate(360deg) translateX(110px) rotate(-360deg); } }
+
+/* K-II: a Dyson ring of collectors spinning round a sun */
+.tier-card.tier-k2 { background: radial-gradient(circle at 80% 50%, #fff 0, #ffd36b 6%, #ff7b00 13%, rgb(255 61 0 / .35) 22%, transparent 34%), #000; }
+.tier-card.tier-k2::before {
+  content: ''; width: 220px; height: 220px; inset: auto; top: calc(50% - 110px); left: calc(80% - 110px); border-radius: 50%;
+  background: repeating-conic-gradient(#ffb300 0 4deg, transparent 4deg 12deg);
+  -webkit-mask: radial-gradient(circle, transparent 54%, #000 55% 63%, transparent 64%); mask: radial-gradient(circle, transparent 54%, #000 55% 63%, transparent 64%);
+  animation: tier-turn 3s linear infinite;
+}
+.tier-card.tier-k2::after { content: ''; background: radial-gradient(circle at 80% 50%, rgb(255 140 0 / .45), transparent 45%); animation: tier-swell .6s ease-in-out infinite alternate; }
+
+/* Ω: deep space: a galaxy turning behind it all, stars drifting past; the black
+   letter glows like an eclipse */
+.tier-card.tier-omega {
+  background:
+    radial-gradient(ellipse at 20% 30%, rgb(168 85 247 / .55), transparent 55%),
+    radial-gradient(ellipse at 80% 70%, rgb(59 130 246 / .5), transparent 55%),
+    radial-gradient(ellipse at 60% 20%, rgb(236 72 153 / .35), transparent 50%),
+    #03010a;
+}
+.tier-card.tier-omega::before {
+  content: ''; inset: -70%;
+  background: conic-gradient(from 0deg, transparent, rgb(255 255 255 / .22) 10%, transparent 22%, rgb(168 85 247 / .4) 35%, transparent 50%, rgb(255 255 255 / .2) 60%, transparent 72%, rgb(59 130 246 / .4) 85%, transparent);
+  filter: blur(10px); animation: tier-turn 7s linear infinite, tier-hue 4s linear infinite;
+}
+.tier-card.tier-omega::after {
+  content: '';
+  background:
+    radial-gradient(circle, #fff 0 1px, transparent 1.6px) 0 0 / 37px 31px,
+    radial-gradient(circle, #cbd5ff 0 1.2px, transparent 2px) 13px 17px / 61px 47px,
+    radial-gradient(circle, #fff 0 1.6px, transparent 2.4px) 29px 5px / 97px 83px;
+  animation: tier-drift 6s linear infinite, tier-twinkle .9s steps(2) infinite;
+}
+@keyframes tier-hue { to { filter: blur(10px) hue-rotate(360deg); } }
+@keyframes tier-drift { to { background-position: -370px 0, -597px 17px, -941px 5px; } }

@@ -8,9 +8,18 @@
     ],
     "rewrites": [
       {
+        "source": "/api/companion/**",
+        "function": { "functionId": "companion", "region": "asia-southeast1" }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
     ]
-  }
+  },
+  "functions": [{
+    "source": "functions",
+    "codebase": "default",
+    "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"]
+  }]
 }

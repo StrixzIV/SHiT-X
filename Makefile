@@ -1,8 +1,9 @@
 auth:
-	@firebase login
+	@npx firebase-tools login
 
 deploy:
+	@npm ci --prefix functions
 	@npm run build
-	@firebase deploy
+	@npx firebase-tools deploy --only functions:companion,hosting
 
 .PHONY: deploy auth

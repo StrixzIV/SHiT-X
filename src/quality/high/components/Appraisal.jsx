@@ -4,6 +4,7 @@ import { beep } from '../fx/sfx.js'
 import { big, si } from '../../../game/format.js'
 
 import { meterAngle, meterFor } from '../../../appraisal/meters.js'
+import './tier.css'
 
 const short = (w) => si(w).replace(' ', '')
 

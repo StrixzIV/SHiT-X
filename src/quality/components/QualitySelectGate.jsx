@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Sparkles, Zap, Feather } from 'lucide-react'
 import { QUALITIES, DEFAULT_QUALITY } from '../qualityUrl.js'
 import { setDevInUrl } from '../high/session.js'
+import BrandLogo from './BrandLogo.jsx'
 
 const QUALITY_INFO = {
   high: {
@@ -12,13 +13,13 @@ const QUALITY_INFO = {
   },
   medium: {
     title: 'Medium',
-    subtitle: 'Blank layout (ยังไม่เปิดใช้งาน)',
+    subtitle: 'Premium UI Library™ — หรู แพง เว่อร์ แต่ไม่มีอะไรเข้ากันเลยสักอย่าง',
     icon: Zap,
     badge: null,
   },
   low: {
     title: 'Low',
-    subtitle: 'Blank layout (ยังไม่เปิดใช้งาน)',
+    subtitle: 'HTML ล้วน ๆ งานส่งตอนเรียนเทอม 1 (ไม่มี CSS)',
     icon: Feather,
     badge: null,
   },
@@ -43,6 +44,7 @@ export default function QualitySelectGate({ currentQuality = DEFAULT_QUALITY, on
       </label>
       <div className="gate-sheet" style={{ maxWidth: 540 }}>
         <header className="gate-head" style={{ textAlign: 'center' }}>
+          <BrandLogo variant="stacked" className="quality-brand" />
           <span className="eyebrow">GRAPHIC QUALITY CONFIGURATION</span>
           <h1 id="quality-gate-title">
             เลือกระดับ <em>กราฟิก</em>

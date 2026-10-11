@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { AlertTriangle, Check, PlugZap, ShieldAlert, X } from 'lucide-react'
+import { AlertTriangle, Check, ShieldAlert, X } from 'lucide-react'
+import BrandLogo from '../../components/BrandLogo.jsx'
 import { schemeSound } from '../sound/scheme.js'
 import { createReadFirstPicker } from './agreementMessages.js'
 
@@ -141,7 +142,7 @@ function ConsentDialog({ onAccept, dev, pickMessage }) {
     <GateWindow title="iLeak: HydroCharging · ข้อตกลงก่อนใช้บริการ" className="gate-final" pickMessage={pickMessage}>
       <div className="gate-content">
         <header className="gate-consent-head">
-          <span className="gate-app-icon"><PlugZap size={32} /></span>
+          <span className="gate-app-icon"><BrandLogo decorative /></span>
           <div><span className="eyebrow">ข้อตกลงก่อนใช้บริการ</span><h1>iLeak: HydroCharging</h1><p><Check size={15} /> อ่านคำเตือนครบทั้ง {FACTS.length} ข้อแล้ว</p></div>
         </header>
         <fieldset className="gate-safety">

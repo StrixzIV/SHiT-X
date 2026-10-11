@@ -4,8 +4,17 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isAfricaRegion, AFRICA_COUNTRY_NAMES } from "./africa-regions.js";
 import { renderBlockedPage } from "./blocked-template.js";
+import { companionMiddleware } from "./companion.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const companionApi = companionMiddleware(process.env);
+export const companion = onRequest(
+  { region: "asia-southeast1", invoker: "public", maxInstances: 1, concurrency: 20, timeoutSeconds: 60 },
+  (req, res) => companionApi(req, res, () => {
+    res.status(404).json({ error: "unknown companion route" });
+  }),
+);
 
 /**
  * Cloud Function gatekeeper: Inspects the client's location and blocks African regions.

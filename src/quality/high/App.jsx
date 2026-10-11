@@ -7,6 +7,8 @@ import AfricaBlock from './components/AfricaBlock.jsx'
 import DevPanel from './components/DevPanel.jsx'
 import FpsMeter from './components/FpsMeter.jsx'
 import Taskbar from './components/Taskbar.jsx'
+import Companion from './companion/Companion.jsx'
+import { nudge } from './companion/brain.js'
 import { schemeSound } from './sound/scheme.js'
 import { detectBrowser } from '../../appraisal/devices.js'
 import MainPage from './pages/MainPage.jsx'
@@ -103,11 +105,18 @@ export default function App({ quality, onQualityChange, onOpenQualityGate }) {
   const showGate = !geoBlocked && !iosBlocked && !agreed && !(dev && skips.gate)
   const desktopReady = !geoBlocked && !iosBlocked && !showGate
   useEffect(() => {
-    if (desktopReady) return schemeSound('startup')
+    if (!desktopReady) return
+    nudge('hello', { browser: detectBrowser().name }, 2)
+    return schemeSound('startup')
   }, [desktopReady])
   useEffect(() => {
-    if (geoBlocked || iosBlocked) return schemeSound('critical')
-  }, [geoBlocked, iosBlocked])
+    if (!geoBlocked && !iosBlocked) return
+    nudge('blocked', { why: geoBlocked ? `region blocked (${geo.countryName})` : 'iPhone/iPad: iOS cannot report charging, no way in' }, 2)
+    return schemeSound('critical')
+  }, [geoBlocked, iosBlocked, geo.countryName])
+  useEffect(() => {
+    if (showGate) nudge('gate', { note: 'a long fake terms-of-service with fake XP error popups before the app' }, 2)
+  }, [showGate])
 
   return (
     <div className="app">
@@ -142,7 +151,7 @@ export default function App({ quality, onQualityChange, onOpenQualityGate }) {
       ) : iosBlocked ? (
         <IosBlock />
       ) : showGate ? (
-        <AgreementGate onAccept={() => setAgreed(true)} dev={dev} />
+        <AgreementGate onAccept={() => { nudge('agree', {}, 1); setAgreed(true) }} dev={dev} />
       ) : (
         <MainPage
           cards={cards}
@@ -168,6 +177,7 @@ export default function App({ quality, onQualityChange, onOpenQualityGate }) {
         covered={showGate || overlay}
       />
       {!geoBlocked && !iosBlocked && <BrowserNotice />}
+      <Companion covered={overlay} />
       {dev && knobs.fps && <FpsMeter />}
     </div>
   )

@@ -45,6 +45,18 @@ Tier comes from the charger wattage; mult₁ is its multiplier.
   - K-II: spinning sun
   - Ω: black glowing letter that spins
 - [ ] **Card shake:** SSSS and above also make the whole tier card quake
+- [ ] **Card backdrops** (`components/tier.css`), each fancier than the last:
+  - S: gold foil with a sheen sweeping across
+  - SS / SSS: holographic foil turning behind the text (SSS twinkles)
+  - SSSS: spinning rainbow border, confetti
+  - kW: crawling hazard-stripe border, flickering work light
+  - MW: flowing water lines, swell
+  - GW: electric border, lightning flashes
+  - TW: sun behind the letter, turning rays
+  - K-I: starfield, planet with an orbiting moon
+  - K-II: Dyson ring spinning round a sun
+  - Ω: nebula, turning galaxy, drifting stars
+- [ ] **Contrast:** title, remark, eyebrow and score stay readable on every tier, Ω and TW included (white text with a dark shadow on the dark set pieces)
 
 **Wattage dropdown:** 5, 10, 20, 45, 65, 100, 140, 240, 280, 330, 500 W, 1 kW, 3 kW, 25 kW, 5 MW, 1.21 GW, 1 TW, 1e17, 3.8e26, 1e42 W
 
@@ -296,14 +308,24 @@ Tiles:
 - [ ] Luna blue windows, white panels, orange button hover border, green controls and original sky/hills background appear at desktop and 390 px widths without horizontal overflow.
 - [ ] Tahoma/Trebuchet and Thai fallback fonts render ่ ้ ๊ ๋ clearly, including in wrapped titles and buttons.
 - [ ] Header contains the brand, PS1/PS2 switch and DEV controls; `--header-h` follows its size. DEV remains above agreement and game overlays.
-- [ ] Bottom taskbar reserves space in the page; Start menu fits on phones, closes with Escape/outside click, and exposes quality selection, quality-screen opener, login and helper restoration.
+- [ ] Bottom taskbar reserves space in the page; Start menu fits on phones, closes with Escape/outside click, and exposes quality selection, quality-screen opener, login and a น้องปลั๊ก help call.
 - [ ] Taskbar mute uses the same master gain as the scenes; clock displays local time.
 - [x] Each agreement warning plays `exclamation`, with gray OK until its cooldown reaches zero; the final consent window plays `ding`. Close/Escape cannot skip warnings or consent, and every normal reload starts again at warning 1.
 - [ ] iOS remains hard-blocked and the region block still works, with the `critical` cue.
-- [ ] Covered taskbar/helper controls cannot receive keyboard focus during the agreement or calculation overlay.
+- [ ] Covered taskbar controls cannot receive keyboard focus during the agreement or calculation overlay.
 - [ ] “ปิดเครื่อง…” opens a restart dialog; cancel/Escape keeps the page intact, and only confirming restart plays `shutdown` and reloads.
 - [ ] Connected/disconnected device cards trigger the correct sound and named hardware balloon; the balloon hides after five seconds or on close, and does not obscure the Start menu.
-- [ ] น้องปลั๊ก gives entry/appraisal/no-peripheral/before-proceed tips, scrolls to controls on “ใช่”, collapses on “ไม่ต้อง”, remembers “ไม่ต้องแสดงอีก” for the session, and can be restored from Start.
+- [ ] **น้องปลั๊ก** (`companion/`) is in the bottom-right corner on every screen (agreement, blocks, main page, scenes), above overlays and below the header. She hops up while Found New Hardware shows.
+- [ ] She remarks on: desktop ready, the agreement and accepting it, the blocks, the tier stamp, the power answer, peripherals, hold, the tally, each scene, the result, the certificate, evaluating again, 45 s idle, returning to the tab, Start → น้องปลั๊ก, and random clicks (not every one).
+- [ ] Her voice: ฉัน for herself, เธอ / นาย / แก for the user, never ท่าน. Nice first, then savage. Thai, short.
+- [ ] Result-scene awareness: setup/click/idle chatter is suppressed; tab return/poke/certificate lines refer to the current result. L7 distinguishes her independent window from the result card, and she can shout from inside the hole while invisible. Slow replies from a previous screen never start speech; cancelled drafts are absent from her model history. Closing the scene restores desktop reactions. Mocked policy/middleware/browser/speech checks are recorded in `handoff/2026-10-11-companion-surroundings.md`.
+- [ ] Messages arrive in persistent MSN bubbles ("น้องปลั๊ก says:"), one message per phrase with "กำลังพิมพ์…" and a chime. Sends less than 10 s apart share the latest bubble; a longer gap creates another. They never fade on a timer. A fourth bubble displaces the oldest. Long bodies scroll internally to the latest message, and three bubbles fit on desktop and short phone/landscape screens.
+- [ ] Clicking a bubble body or its ✕ (also by keyboard) dismisses only that bubble. Dismissing an old one preserves current speech and the queued line; dismissing the active one stops the voice, later phrases and queued speech, even while composing/TTS is pending or its last phrase is playing. Minimising/poking her preserves completed notifications. With voice, each phrase is read separately with a short pause; product names like `SS` / `PS2` aren't read on their own.
+- [ ] Her face changes with each line. Clicking her cuts her off and she complains. Minimise gives an orb that still talks and is remembered.
+- [ ] She and the agreement never cover the taskbar: the agreement layer ends at its top edge, and she sits above it everywhere except the full-screen result overlay.
+- [ ] With the demo keys from `functions/.env` under Vite or Firebase: lines come from DeepSeek and are spoken by Paxa (`bualoi`). DeepSeek mixes built-in lines as written, extended, shortened and its own; the server console shows `[companion] <event> · <mode>: <line>`. Mute silences her. Without an available API: prewritten lines, the chime, no voice and no errors. Switching from High to another quality stops her current speech and cancels late replies.
+- [ ] L7: her full Messenger window has its own orbit, separate from the result card. Existing notifications join it. Each new MSN bubble stays at the corner while speaking, then spirals into the hole, disappears briefly and is spat into its own orbit with its completed text intact. Many bubbles can accumulate (32 before oldest-debris eviction); a new line never appends to an already-floating bubble.
+- [ ] L7: title-bar drag/fling, portrait poke, minimise/orb and individual bubble dismissal still work. Hover/focus never slows or enlarges the floating UI. Dismissing the live bubble stops speech and prevents ghost debris. Reduced motion gives a static scrolling collection; print hides the pile. Exit removes floating UI, restores the normal three-bubble dock and speaks the release remark; reentering starts a fresh pile.
 - [ ] Certificate sticker has a guilloche pattern, hologram, tier edition and stable `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX` fake key. Printing shows only the certificate, including from an orbiting L7 card.
 - [ ] Calculation uses the original SVG hourglass cursor; reduced motion keeps the UI and L7 readable.
 - [ ] Each event in `public/sounds/README.md` loads `.mp3` / `.wav` / `.ogg` in order; missing or broken files fall back to synthesis, respect mute and tolerate browser autoplay restrictions.

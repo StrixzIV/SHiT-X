@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Droplets, Power, Volume2, VolumeX, X } from 'lucide-react'
+import { Power, Volume2, VolumeX, X } from 'lucide-react'
+import BrandLogo from '../../components/BrandLogo.jsx'
 import StartMenu from './StartMenu.jsx'
 import HardwareBalloon from './HardwareBalloon.jsx'
 import { schemeSound } from '../sound/scheme.js'
@@ -44,11 +45,11 @@ export default function Taskbar({ sound, onSound, quality = 'high', onQualityCha
   return (
     <div ref={ref} className="taskbar" aria-label="แถบงาน" inert={covered || undefined} aria-hidden={covered || undefined}>
       {open && <StartMenu quality={quality} onQualityChange={onQualityChange} onOpenQualityGate={onOpenQualityGate} onClose={() => setOpen(false)} onRestart={() => setRestart(true)} />}
-      <button ref={start} type="button" className={`start-button${open ? ' on' : ''}`} onClick={toggle} disabled={covered} aria-expanded={open} aria-controls="xp-start-menu"><Droplets size={24} /> <span>start</span></button>
+      <button ref={start} type="button" className={`start-button${open ? ' on' : ''}`} onClick={toggle} disabled={covered} aria-expanded={open} aria-controls="xp-start-menu"><BrandLogo decorative /> <span>start</span></button>
       <button type="button" className="taskbar-app" disabled={covered} onClick={() => {
         setOpen(false)
         window.scrollTo({ top: 0, behavior: 'smooth' })
-      }}><Droplets size={18} /><span>iLeak: HydroCharging</span></button>
+      }}><BrandLogo decorative /><span>iLeak: HydroCharging</span></button>
       <div className="taskbar-tray">
         <HardwareBalloon cards={cards} active={active} hidden={open || restart || covered} />
         <button type="button" onClick={onSound} disabled={covered} aria-label={sound ? 'ปิดเสียง' : 'เปิดเสียง'} title={sound ? 'ปิดเสียง' : 'เปิดเสียง'}>{sound ? <Volume2 size={18} /> : <VolumeX size={18} />}</button>

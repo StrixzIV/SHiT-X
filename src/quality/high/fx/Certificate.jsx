@@ -1,4 +1,5 @@
-import { Droplets, Printer } from 'lucide-react'
+import { Printer } from 'lucide-react'
+import BrandLogo from '../../components/BrandLogo.jsx'
 
 function productKey(id) {
   const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
@@ -20,8 +21,8 @@ function productKey(id) {
 export default function Certificate({ cert, tier, volts, verdict }) {
   return (
     <div className="cert">
-      <div className="coa-hologram" aria-hidden="true"><Droplets size={30} /><span>iLeak<br />ORIGINAL<br />iLeak<br />ORIGINAL</span></div>
-      <div className="coa-brand"><Droplets size={21} /><b>iLeak: HydroCharging</b></div>
+      <div className="coa-hologram" aria-hidden="true"><BrandLogo decorative /><span>iLeak<br />ORIGINAL<br />iLeak<br />ORIGINAL</span></div>
+      <div className="coa-brand"><BrandLogo variant="wordmark" /><b>HydroCharging</b></div>
       <div className="coa-heading"><strong>Certificate of Authenticity</strong><span className="coa-edition">{tier.id} EDITION</span></div>
       <div className="cert-id">CERTIFICATE ID: {cert.id}</div>
       <h3>หนังสือรับรองระดับชั้นทางพลังงาน</h3>
